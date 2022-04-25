@@ -2,30 +2,26 @@ import random as rnd
 import math
 from PIL import Image, ImageTk
 import colorsys
+import numpy as np
 
 
 class Swarmalator:
-    def __init__(self, id, screen_size, phase=None):
+    def __init__(self, id, phase=None):
 
         self.id = 'swrmltr' + str(id)
 
-        self.x = rnd.randrange(10, screen_size - 10)
-        self.y = rnd.randrange(10, screen_size - 10)
-
-        self.angle = rnd.uniform(0.0, 2.0 * math.pi)
-        self.speed = 0
+        self.position = np.array([rnd.random() * 2 - 1, rnd.random() * 2 - 1])
+        self.velocity = np.array([0, 0])
 
         self.phase = phase if phase is not None else rnd.uniform(0.0, 2.0 * math.pi)
         self.d_phase = 0
 
-        self.swarm_phases = {}
-        self.swarm_positions = {}
+        self.neighbour_phases = {}
+        self.neighbour_positions = {}
 
        
-    def draw_swarmalator(self, canvas):
+    def draw_swarmalator(self, canvas, screen_size):
         size = 10
-        x1 = self.x + size
-        x2 = self.y + size
 
         # color based on swarmalator phase
         c_val = self.phase / (2.0 * math.pi) % (2.0 * math.pi)
@@ -33,25 +29,26 @@ class Swarmalator:
         c_int = tuple(int(t * 255) for t in c_rgb)
         c_hex = '#%02x%02x%02x' % c_int
 
-        canvas.create_oval(self.x, self.y, x1, x2, fill=c_hex, tags=self.id)
+        canv_pos_x = self.position[0] * screen_size / 4 + screen_size / 2
+        canv_pos_y = self.position[1] * screen_size / 4 + screen_size / 2
 
-    def update(self, canvas, screen_size, delta_t):
-        # update position
-        distance = self.speed * delta_t
+        x1 = canv_pos_x + size
+        x2 = canv_pos_y + size
 
+        canvas.create_oval(canv_pos_x, canv_pos_y, x1, x2, fill=c_hex, tags=self.id)
+
+    def move(self, canvas, screen_size, delta_t):
         # calculate next position the swarmalator moves to
-        self.x += distance * math.cos(self.angle)
-        self.y += distance * math.sin(self.angle)
+        self.position = self.position + self.velocity * delta_t
 
         # when swarmalator goes off screen, will come back from other side of screen
-        self.x = self.x % screen_size
-        self.y = self.y % screen_size
+        if self.position[0] < -2.0: self.position[0] += 4.0
+        if self.position[0] > 2.0: self.position[0] -= 4.0
+        if self.position[1] < -2.0: self.position[1] += 4.0
+        if self.position[1] > 2.0: self.position[1] -= 4.0
 
         # update phase
-        self.phase += self.d_phase * delta_t
+        self.phase = (self.phase + self.d_phase * delta_t) % (2.0 * math.pi)
 
         canvas.delete(self.id)
-        self.draw_swarmalator(canvas)
-
-    def euclidean_distance(self, neighbour_boid):
-        return math.sqrt((self.x - neighbour_boid.x) * (self.x - neighbour_boid.x) + (self.y - neighbour_boid.y) * (self.y - neighbour_boid.y))
+        self.draw_swarmalator(canvas, screen_size)

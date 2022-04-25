@@ -16,70 +16,48 @@ def create_swarmalators(canvas, no_of_swarmalators, screen_size):
     list_of_swarmalators = []
 
     for n in range(no_of_swarmalators):
-        swarmalator = Swarmalator(n, screen_size)
+        swarmalator = Swarmalator(n)
         list_of_swarmalators.append(swarmalator)
-        swarmalator.draw_swarmalator(canvas)
+        swarmalator.draw_swarmalator(canvas, screen_size)
 
     return list_of_swarmalators
 
-def step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability = 0.01):
+def step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability = 0.01, animation_speed=1):
     for swarmalator in list_of_swarmalators:
-        compute_speed(list_of_swarmalators, swarmalator, J)
-        compute_phase(list_of_swarmalators, swarmalator, K)
+        update(list_of_swarmalators, swarmalator, J, K)
         synchronize(list_of_swarmalators, swarmalator, coupling_probability)
 
-        swarmalator.update(canvas, screen_size, delta_t)
-
-    # print('step')
-    time.sleep(delta_t)
+        swarmalator.move(canvas, screen_size, delta_t)
 
     # loop
-    canvas.after(10, step, canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability)
+    delay = int(delta_t * 1000)
+    canvas.after(delay, step, canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability)
 
-def compute_speed(list_of_swarmalators, swarmalator, J):
-    s_i = swarmalator
+def update(list_of_swarmalators, swarmalator_i, J, K):
+    if swarmalator_i.neighbour_positions and swarmalator_i.neighbour_phases:
+        x_i = swarmalator_i.position
+        theta_i = swarmalator_i.phase
 
-    if s_i.swarm_positions and s_i.swarm_phases:
-        s_i_pos = np.array([swarmalator.x, swarmalator.y])
         v_temp = np.array([0.0, 0.0])
-
-        for j in list_of_swarmalators:
-            if j.id != s_i.id:
-                s_j_pos = s_i.swarm_positions[j.id]
-                s_j_phase = s_i.swarm_phases[j.id]
-                
-                dif = s_j_pos - s_i_pos
-                norm = np.linalg.norm(dif)
-
-                v_temp += (dif / norm * (1000 + J * math.cos(s_j_phase - s_i.phase)) - dif / (norm * norm))
-
-        v = 1 / (len(s_i.swarm_positions)) * v_temp
-        s_i.speed = np.linalg.norm(v)
-        s_i.angle = math.atan2(v[1], v[0])
-
-def compute_phase(list_of_swarmalators, swarmalator, K):
-    s_i = swarmalator
-
-    if s_i.swarm_positions and s_i.swarm_phases:
-        s_i_pos = np.array([s_i.x, s_i.y])
-        s_i_phase = s_i.phase
         p_temp = 0.0
 
-        for j in list_of_swarmalators:
-            if j.id != s_i.id:
-                s_j_pos = s_i.swarm_positions[j.id]
-                s_j_phase = s_i.swarm_phases[j.id]
+        for swarmalator_j in list_of_swarmalators:
+            if swarmalator_j.id != swarmalator_i.id:
+                x_j = swarmalator_i.neighbour_positions[swarmalator_j.id]
+                theta_j = swarmalator_i.neighbour_phases[swarmalator_j.id]
                 
-                norm = np.linalg.norm(s_j_pos - s_i_pos)
+                d_x = x_j - x_i
+                d_theta = theta_j - theta_i
+                d_x_norm = np.linalg.norm(d_x)
+                
+                v_temp += (d_x / d_x_norm * (1.0 + J * math.cos(d_theta)) - d_x / (d_x_norm * d_x_norm))
+                p_temp += math.sin(d_theta) / d_x_norm
 
-                p_temp += math.sin(s_j_phase - s_i_phase) / norm
+        swarmalator_i.velocity = 1 / (len(swarmalator_i.neighbour_positions)) * v_temp
+        swarmalator_i.d_phase = K / (len(swarmalator_i.neighbour_phases)) * p_temp
 
-        p = K / (len(s_i.swarm_phases)) * p_temp
-        s_i.d_phase = p
-
-def synchronize(list_of_swarmalators, swarmalator, coupling_probability):
+def synchronize(list_of_swarmalators, swarmalator, coupling_probability=1):
     for s in list_of_swarmalators:
         if s.id != swarmalator.id:
-            # if rnd.random() < coupling_probability:
-            swarmalator.swarm_positions[s.id] = np.array([s.x, s.y])
-            swarmalator.swarm_phases[s.id] = s.phase
+            swarmalator.neighbour_positions[s.id] = s.position
+            swarmalator.neighbour_phases[s.id] = s.phase
