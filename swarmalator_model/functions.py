@@ -1,5 +1,6 @@
-import tkinter
+import tkinter, threading, time
 from swarmalator_model.swarmalator import Swarmalator
+
 
 def initialise_canvas(window, screen_size):
     '''Initializes a tikinter canvas.
@@ -52,11 +53,11 @@ def step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_prob
         J (float): Parameter that influences the attraction and repulsion between swarmalators
         K (float): Parameter that influences the phase synchronization between swarmalators
         coupling_probability (float): Probability for a swarmalator to update its information about neighbours (default `0.01`)
-    '''
+    '''    
     for swarmalator in list_of_swarmalators:
+        swarmalator.synchronize(list_of_swarmalators, coupling_probability)
         swarmalator.update(list_of_swarmalators, J, K)
         swarmalator.move(canvas, screen_size, delta_t)
-        swarmalator.synchronize(list_of_swarmalators, coupling_probability)
 
     delay = int(delta_t * 1000)
     canvas.after(delay, step, canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability)

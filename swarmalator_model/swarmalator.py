@@ -3,6 +3,7 @@ import math
 import colorsys
 import numpy as np
 
+
 class Swarmalator:
     def __init__(self, id, phase=None):
         '''Creates a swarmalator instance.
@@ -23,7 +24,6 @@ class Swarmalator:
         self.neighbour_phases = {}
         self.neighbour_positions = {}
        
-
     def draw_swarmalator(self, canvas, screen_size):
         '''Adds the swarmalator to a canvas instance.
 
@@ -47,7 +47,6 @@ class Swarmalator:
         x2 = canv_pos_y + size
 
         canvas.create_oval(canv_pos_x, canv_pos_y, x1, x2, fill=c_hex, tags=self.id)
-
 
     def move(self, canvas, screen_size, delta_t):
         '''Computes the swarmalators new position and adds it to a canvas object.
@@ -74,7 +73,6 @@ class Swarmalator:
         canvas.delete(self.id)
         self.draw_swarmalator(canvas, screen_size)
     
-
     def update(self, list_of_swarmalators, J, K):
         '''Updates the position and pahse of a swarmalator based on it's neighbours.
 
@@ -93,7 +91,7 @@ class Swarmalator:
             p_temp = 0.0
 
             for swarmalator_j in list_of_swarmalators:
-                if swarmalator_j.id != self.id:
+                if swarmalator_j.id != self.id and swarmalator_j.id in self.neighbour_positions and swarmalator_j.id in self.neighbour_phases:
                     x_j = self.neighbour_positions[swarmalator_j.id]
                     theta_j = self.neighbour_phases[swarmalator_j.id]
                     
@@ -107,7 +105,6 @@ class Swarmalator:
             self.velocity = 1 / (len(self.neighbour_positions)) * v_temp
             self.d_phase = K / (len(self.neighbour_phases)) * p_temp
 
-
     def synchronize(self, list_of_swarmalators, coupling_probability=1):
         '''Updates a swarmalator's memory of positions and phases of it's neighbours.
 
@@ -119,5 +116,7 @@ class Swarmalator:
         '''
         for s in list_of_swarmalators:
             if s.id != self.id:
-                self.neighbour_positions[s.id] = s.position
-                self.neighbour_phases[s.id] = s.phase
+                r = rnd.random()
+                if r <= coupling_probability:
+                    self.neighbour_positions[s.id] = s.position
+                    self.neighbour_phases[s.id] = s.phase
