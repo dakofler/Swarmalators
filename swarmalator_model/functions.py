@@ -75,11 +75,17 @@ def step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_prob
         K (float): Parameter that influences the phase synchronization between swarmalators
         coupling_probability (float): Probability for a swarmalator to update its information about neighbours (default `0.01`)
     '''    
-    
-    for swarmalator in list_of_swarmalators:
-        threading.Thread(target=swarmalator.step, args=(list_of_swarmalators, canvas, screen_size, delta_t, J, K, coupling_probability)).start()
-
     canvas.delete("all")
+    threads = []
+
+    for swarmalator in list_of_swarmalators:
+        t = threading.Thread(target=swarmalator.step, args=(list_of_swarmalators, canvas, screen_size, delta_t, J, K, coupling_probability), daemon=True)
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
     for swarmalator in list_of_swarmalators:
         swarmalator.draw_swarmalator(canvas, screen_size)
 
