@@ -14,13 +14,10 @@ class Swarmalator:
             phase (float): pahse of the swarmalator (default `None`)
         '''
         self.id = 'swrmltr' + str(id)
-
         self.position = np.array([rnd.random() * 2 - 1, rnd.random() * 2 - 1])
         self.velocity = np.array([0, 0])
-
         self.phase = phase if phase is not None else rnd.uniform(0.0, 2.0 * math.pi)
         self.d_phase = 0
-
         self.neighbour_phases = {}
         self.neighbour_positions = {}
        
@@ -42,19 +39,33 @@ class Swarmalator:
 
         canv_pos_x = self.position[0] * screen_size / 4 + screen_size / 2
         canv_pos_y = self.position[1] * screen_size / 4 + screen_size / 2
-
         x1 = canv_pos_x + size
         x2 = canv_pos_y + size
 
         canvas.create_oval(canv_pos_x, canv_pos_y, x1, x2, fill=c_hex, tags=self.id)
 
-    def move(self, canvas, screen_size, delta_t):
-        '''Computes the swarmalators new position and adds it to a canvas object.
+    def step(self, list_of_swarmalators, canvas, screen_size, delta_t, J, K, coupling_probability):
+        '''Makes the swarmalator sync, update and move.
 
         Parameters
         ----------
+            list_of_swarmalators (list[swarmalator_model.Swarmalator]): List of swarmalator objects
             canvas (tikinter.Canvas): Canvas object the swarmalators should be added to.
             screen_size (int): size of the canvas
+            delta_t (float): value of one euler step
+            J (float): Parameter that influences the attraction and repulsion between swarmalators
+            K (float): Parameter that influences the phase synchronization between swarmalators
+            coupling_probability (float): Probability for a swarmalator to update its information about neighbours
+        '''
+        self.synchronize(list_of_swarmalators, coupling_probability)
+        self.update(list_of_swarmalators, J, K)
+        self.move(canvas, screen_size, delta_t)
+
+    def move(self, delta_t):
+        '''Computes the swarmalators new position.
+
+        Parameters
+        ----------
             delta_t (float): value of one euler step
 
         '''
@@ -69,9 +80,6 @@ class Swarmalator:
 
         # update phase
         self.phase = (self.phase + self.d_phase * delta_t) % (2.0 * math.pi)
-
-        canvas.delete(self.id)
-        self.draw_swarmalator(canvas, screen_size)
     
     def update(self, list_of_swarmalators, J, K):
         '''Updates the position and pahse of a swarmalator based on it's neighbours.
@@ -79,7 +87,6 @@ class Swarmalator:
         Parameters
         ----------
             list_of_swarmalators (list[swarmalator_model.Swarmalator]): List of swarmalator objects
-            swarmalator_i (swarmalator_model.Swarmalator): swarmalator object that is to be updated
             J (float): Parameter that influences the attraction and repulsion between swarmalators
             K (float): Parameter that influences the phase synchronization between swarmalators
         '''
@@ -105,14 +112,13 @@ class Swarmalator:
             self.velocity = 1 / (len(self.neighbour_positions)) * v_temp
             self.d_phase = K / (len(self.neighbour_phases)) * p_temp
 
-    def synchronize(self, list_of_swarmalators, coupling_probability=1):
+    def synchronize(self, list_of_swarmalators, coupling_probability):
         '''Updates a swarmalator's memory of positions and phases of it's neighbours.
 
         Parameters
         ----------
             list_of_swarmalators (list[swarmalator_model.Swarmalator]): List of swarmalator objects
-            swarmalator (swarmalator_model.Swarmalator): swarmalator object that should synchronize its memory
-            coupling_probability (float): Probability for a swarmalator to update its information about neighbours (default `0.01`)
+            coupling_probability (float): Probability for a swarmalator to update its information about neighbours
         '''
         for s in list_of_swarmalators:
             if s.id != self.id:

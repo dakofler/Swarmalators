@@ -1,6 +1,7 @@
+from ast import arg
+from concurrent.futures import thread
 import tkinter, threading, time
 from swarmalator_model.swarmalator import Swarmalator
-
 
 def initialise_canvas(window, screen_size):
     '''Initializes a tikinter canvas.
@@ -41,7 +42,16 @@ def create_swarmalators(canvas, no_of_swarmalators, screen_size):
 
     return list_of_swarmalators
 
-def step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability = 0.01):
+def run_simulation(screen_size, no_of_swarmalators, delta_t, J, K, coupling_probability):
+    sim = tkinter.Tk()
+    canvas = initialise_canvas(sim, screen_size)
+    list_of_swarmalators = create_swarmalators(canvas, no_of_swarmalators, screen_size)
+
+    step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability)
+
+    sim.mainloop()
+
+def step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability):
     '''Updates the canas and all swarmalators.
 
     Parameters
@@ -54,10 +64,13 @@ def step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_prob
         K (float): Parameter that influences the phase synchronization between swarmalators
         coupling_probability (float): Probability for a swarmalator to update its information about neighbours (default `0.01`)
     '''    
+    
     for swarmalator in list_of_swarmalators:
-        swarmalator.synchronize(list_of_swarmalators, coupling_probability)
-        swarmalator.update(list_of_swarmalators, J, K)
-        swarmalator.move(canvas, screen_size, delta_t)
+        threading.Thread(target=swarmalator.step, args=(list_of_swarmalators, canvas, screen_size, delta_t, J, K, coupling_probability)).start()
+
+    canvas.delete("all")
+    for swarmalator in list_of_swarmalators:
+        swarmalator.draw_swarmalator(canvas, screen_size)
 
     delay = int(delta_t * 1000)
     canvas.after(delay, step, canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability)
