@@ -43,6 +43,17 @@ def create_swarmalators(canvas, no_of_swarmalators, screen_size):
     return list_of_swarmalators
 
 def run_simulation(screen_size, no_of_swarmalators, delta_t, J, K, coupling_probability):
+    '''Initiates the main loop of the simulation.
+
+    Parameters
+    ----------
+        screen_size (int): size of the canas
+        no_of_swarmalators (int): Number of swarmalators to add to a canvas
+        delta_t (float): value of one euler step, rate at which the canas updates
+        J (float): Parameter that influences the attraction and repulsion between swarmalators
+        K (float): Parameter that influences the phase synchronization between swarmalators
+        coupling_probability (float): Probability for a swarmalator to update its information about neighbours (default `0.01`)
+    ''' 
     sim = tkinter.Tk()
     canvas = initialise_canvas(sim, screen_size)
     list_of_swarmalators = create_swarmalators(canvas, no_of_swarmalators, screen_size)

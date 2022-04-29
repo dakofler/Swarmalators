@@ -59,7 +59,7 @@ class Swarmalator:
         '''
         self.synchronize(list_of_swarmalators, coupling_probability)
         self.update(list_of_swarmalators, J, K)
-        self.move(canvas, screen_size, delta_t)
+        self.move(delta_t)
 
     def move(self, delta_t):
         '''Computes the swarmalators new position.
