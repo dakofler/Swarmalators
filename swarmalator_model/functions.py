@@ -55,6 +55,7 @@ def run_simulation(screen_size, no_of_swarmalators, delta_t, J, K, coupling_prob
         coupling_probability (float): Probability for a swarmalator to update its information about neighbours (default `0.01`)
     ''' 
     sim = tkinter.Tk()
+    sim.title('Swarmalators with Stochastic Coupling 2022 D. Kofler')
     canvas = initialise_canvas(sim, screen_size)
     list_of_swarmalators = create_swarmalators(canvas, no_of_swarmalators, screen_size)
 
