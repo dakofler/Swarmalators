@@ -10,8 +10,8 @@ class Swarmalator:
 
         Parameters
         ----------
-            id (str): id of the swarmalator.
-            phase (float): pahse of the swarmalator (default `None`)
+            id (int): id of the swarmalator.
+            num_of_swarmalators (int): number of swarmalators used in the model
         '''
         self.id = id
 
@@ -55,8 +55,6 @@ class Swarmalator:
         Parameters
         ----------
             list_of_swarmalators (list[swarmalator_model.Swarmalator]): List of swarmalator objects
-            canvas (tikinter.Canvas): Canvas object the swarmalators should be added to.
-            screen_size (int): size of the canvas
             delta_t (float): value of one euler step
             J (float): Parameter that influences the attraction and repulsion between swarmalators
             K (float): Parameter that influences the phase synchronization between swarmalators
@@ -85,7 +83,7 @@ class Swarmalator:
 
         Parameters
         ----------
-            list_of_swarmalators (list[swarmalator_model.Swarmalator]): List of swarmalator objects
+            num_of_swarmalators (int): number of swarmalators used in the model
             J (float): Parameter that influences the attraction and repulsion between swarmalators
             K (float): Parameter that influences the phase synchronization between swarmalators
         '''
@@ -93,7 +91,7 @@ class Swarmalator:
         p_temp = 0.0
 
         for i in range(num_of_swarmalators):
-            if i != self.id:
+            if i != self.id and (self.positions[i][0] != 0 or self.positions[i][1] != 0):
                 d_x = self.positions[i] - self.positions[self.id]
                 d_theta = self.phases[i] - self.phases[self.id]
                 d_x_norm = np.linalg.norm(d_x)
