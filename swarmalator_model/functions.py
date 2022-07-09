@@ -1,9 +1,7 @@
-from ast import arg
-from concurrent.futures import thread
-import tkinter, threading, time
+import tkinter
 from swarmalator_model.swarmalator import Swarmalator
 
-def initialise_canvas(window, screen_size):
+def initialize_canvas(window, screen_size):
     '''Initializes a tikinter canvas.
 
     Parameters
@@ -57,7 +55,7 @@ def run_simulation(screen_size, no_of_swarmalators, delta_t, J, K, coupling_prob
         memory_init (string): Determines how position and phase memories of swarmalators are initialized. Options: `zero`, `rand` (default `zero`)
     ''' 
     sim = tkinter.Tk()
-    canvas = initialise_canvas(sim, screen_size)
+    canvas = initialize_canvas(sim, screen_size)
     list_of_swarmalators = create_swarmalators(canvas, no_of_swarmalators, screen_size, memory_init)
 
     step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability)

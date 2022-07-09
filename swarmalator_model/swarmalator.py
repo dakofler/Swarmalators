@@ -4,7 +4,6 @@ import colorsys
 import numpy as np
 import tkinter as tk
 
-
 class Swarmalator:
     def __init__(self, id, num_of_swarmalators, memory_init):
         '''Creates a swarmalator instance.
@@ -17,7 +16,7 @@ class Swarmalator:
         '''
         self.id = id
 
-        self.velocity = np.zeros(2)
+        self.velocity = np.ones(2)
         self.d_phase = 0
 
         # initialize memories with random values
