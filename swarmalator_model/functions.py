@@ -34,7 +34,7 @@ def create_swarmalators(canvas, no_of_swarmalators, screen_size):
     list_of_swarmalators = []
 
     for n in range(no_of_swarmalators):
-        swarmalator = Swarmalator(n)
+        swarmalator = Swarmalator(n, no_of_swarmalators)
         list_of_swarmalators.append(swarmalator)
 
     return list_of_swarmalators
@@ -111,10 +111,12 @@ def step(canvas, list_of_swarmalators, positions, phases, screen_size, delta_t, 
         coupling_probability (float): Probability for a swarmalator to update its information about neighbours (default `0.01`)
     '''    
     canvas.delete("all")
-    threads = []
 
     start = time.time()  
     for swarmalator in list_of_swarmalators:
+<<<<<<< HEAD
+        swarmalator.step(list_of_swarmalators, delta_t, J, K, coupling_probability)
+=======
         # swarmalator.step(positions, phases, delta_t, J, K, coupling_probability)
         t = threading.Thread(target=swarmalator.step, args=(positions, phases, delta_t, J, K, coupling_probability), daemon=True)
         threads.append(t)
@@ -128,6 +130,7 @@ def step(canvas, list_of_swarmalators, positions, phases, screen_size, delta_t, 
     end = time.time()
     calc_time = end - start
     print(f'calc time {calc_time} s ...')
+>>>>>>> 347b629196238f5cbec67f52fe036be96e460b18
 
     delay = int(delta_t * 1000 - calc_time)
     canvas.after(delay, step, canvas, list_of_swarmalators, positions, phases, screen_size, delta_t, J, K, coupling_probability)
