@@ -1,7 +1,7 @@
 import tkinter
 from swarmalator_model.swarmalator import Swarmalator
 
-def initialize_canvas(window, screen_size):
+def init_canvas(window, screen_size):
     '''Initializes a tikinter canvas.
 
     Parameters
@@ -18,12 +18,12 @@ def initialize_canvas(window, screen_size):
     window.resizable(False, False)
     return canvas
 
-def create_swarmalators(canvas, no_of_swarmalators, screen_size, memory_init):
+def init_swarmalators(canvas, no_of_swarmalators, screen_size, memory_init):
     '''Creates swarmalator instances.
 
     Parameters
     ----------
-        canvas (tikinter.Canvas): Canvas object the swarmalators should be added to.
+        canvas (tikinter.Canvas): Canvas object the swarmalators should be added to
         no_of_swarmalators (int): Number of swarmalators to add to a canvas
         screen_size (int): size of the canas
         memory_init (string): Determines how position and phase memories of swarmalators are initialized. Options: `zero`, `rand`
@@ -37,11 +37,11 @@ def create_swarmalators(canvas, no_of_swarmalators, screen_size, memory_init):
     for n in range(no_of_swarmalators):
         swarmalator = Swarmalator(n, no_of_swarmalators, memory_init)
         list_of_swarmalators.append(swarmalator)
-        swarmalator.draw_swarmalator(canvas, screen_size)
+        swarmalator.draw(canvas, screen_size)
 
     return list_of_swarmalators
 
-def run_simulation(screen_size, no_of_swarmalators, delta_t, J, K, coupling_probability, memory_init = 'rand'):
+def run(screen_size, no_of_swarmalators, delta_t, J, K, coupling_probability, memory_init = 'rand'):
     '''Initiates the main loop of the simulation.
 
     Parameters
@@ -55,8 +55,8 @@ def run_simulation(screen_size, no_of_swarmalators, delta_t, J, K, coupling_prob
         memory_init (string): Determines how position and phase memories of swarmalators are initialized. Options: `zero`, `rand` (default `zero`)
     ''' 
     sim = tkinter.Tk()
-    canvas = initialize_canvas(sim, screen_size)
-    list_of_swarmalators = create_swarmalators(canvas, no_of_swarmalators, screen_size, memory_init)
+    canvas = init_canvas(sim, screen_size)
+    list_of_swarmalators = init_swarmalators(canvas, no_of_swarmalators, screen_size, memory_init)
 
     step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability)
 
@@ -75,13 +75,13 @@ def step(canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_prob
         K (float): Parameter that influences the phase synchronization between swarmalators
         coupling_probability (float): Probability for a swarmalator to update its information about neighbours (default `0.01`)
     '''    
-    canvas.delete("all")
+    canvas.delete('all')
 
     for swarmalator in list_of_swarmalators:
         swarmalator.step(list_of_swarmalators, delta_t, J, K, coupling_probability)
 
     for swarmalator in list_of_swarmalators:
-        swarmalator.draw_swarmalator(canvas, screen_size)
+        swarmalator.draw(canvas, screen_size)
 
     delay = int(delta_t * 1000)
     canvas.after(delay, step, canvas, list_of_swarmalators, screen_size, delta_t, J, K, coupling_probability)

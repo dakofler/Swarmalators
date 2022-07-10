@@ -32,7 +32,7 @@ class Swarmalator:
             self.positions[self.id][1] = rnd.random() * 2 - 1
             self.phases[self.id] = rnd.uniform(0.0, 2.0 * math.pi)           
        
-    def draw_swarmalator(self, canvas, screen_size):
+    def draw(self, canvas, screen_size):
         '''Adds the swarmalator to a canvas instance.
 
         Parameters
@@ -59,7 +59,7 @@ class Swarmalator:
 
 
     def step(self, list_of_swarmalators, delta_t, J, K, coupling_probability):
-        '''Makes the swarmalator sync, update and move.
+        '''Makes the swarmalator scan it's surroundings, compute their next step and move.
 
         Parameters
         ----------
@@ -69,8 +69,8 @@ class Swarmalator:
             K (float): Parameter that influences the phase synchronization between swarmalators
             coupling_probability (float): Probability for a swarmalator to update its information about neighbours
         '''
-        self.synchronize(list_of_swarmalators, coupling_probability)
-        self.update(len(list_of_swarmalators), J, K)
+        self.scan(list_of_swarmalators, coupling_probability)
+        self.think(J, K)
         self.move(delta_t)
 
     def move(self, delta_t):
@@ -87,8 +87,8 @@ class Swarmalator:
         # update phase
         self.phases[self.id] = (self.phases[self.id] + self.d_phase * delta_t) % (2.0 * math.pi)
     
-    def update(self, num_of_swarmalators, J, K):
-        '''Updates the position and phase of a swarmalator based on it's neighbours.
+    def think(self, J, K):
+        '''Computes the velocity and phase-change of a swarmalator based on it's neighbours.
 
         Parameters
         ----------
@@ -99,7 +99,7 @@ class Swarmalator:
         v_temp = np.zeros(2)
         p_temp = 0.0
 
-        for i in range(num_of_swarmalators):
+        for i in range(len(self.positions)):
             if i != self.id:
                 d_x = self.positions[i] - self.positions[self.id]
                 d_theta = self.phases[i] - self.phases[self.id]
@@ -111,7 +111,7 @@ class Swarmalator:
         self.velocity = 1 / (len(self.positions)) * v_temp
         self.d_phase = K / (len(self.phases)) * p_temp
 
-    def synchronize(self, list_of_swarmalators, coupling_probability):
+    def scan(self, list_of_swarmalators, coupling_probability):
         '''Updates a swarmalator's memory of positions and phases of it's neighbours.
 
         Parameters
