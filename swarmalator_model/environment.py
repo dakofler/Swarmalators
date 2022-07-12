@@ -1,12 +1,13 @@
-import random as rnd
 import time
-import math
-import colorsys
 import numpy as np
 import tkinter as tk
 
-from sqlalchemy import true
+from multiprocessing import Process
+import threading
+
 from swarmalator_model.swarmalator import Swarmalator
+from swarmalator_model import functions as fct
+
 
 class Environment:
     def __init__(self, num_swarmalators, memory_init = 'rand', screen_size='1000'):
@@ -41,6 +42,22 @@ class Environment:
         self.init_positions_phases()
         self.draw()
 
+        # processes = []
+        # threads = []
+
+        # for s in self.list_of_swarmalators:
+            # process = Process(target=s.run, args=(self.list_of_swarmalators, self.positions, self.phases, delta_t, J, K, coupling_probability))
+            # processes.append(process)
+
+            # thread = threading.Thread(target=s.run, args=(self.list_of_swarmalators, self.positions, self.phases, delta_t, J, K, coupling_probability))
+            # threads.append(thread)
+        
+        # for p in processes:
+        #     p.start()
+
+        # for t in threads:
+        #     t.start()
+
         self.iteration(delta_t, J, K, coupling_probability)
         self.sim.mainloop()
 
@@ -48,30 +65,25 @@ class Environment:
         start = time.time()
 
         for s in self.list_of_swarmalators:
-            
-            s.run(self.list_of_swarmalators, self.positions, self.phases, delta_t, J, K, coupling_probability)
+            s.run(self.positions, self.phases, delta_t, J, K, coupling_probability)
 
         self.draw()
         end = time.time()
-        comp_time = end - start
-        print(f'comp_time={round((end - start) * 1000, 2)}ms')
-        self.canvas.after(max(int(delta_t * 1000 - comp_time), int(delta_t * 1000)), self.iteration, delta_t, J, K, coupling_probability)
+        print(f'step={round((end - start) * 1000)}ms')
+
+        wait_time = max(int(delta_t * 1000 - (end - start)), 1)
+        self.canvas.after(wait_time, self.iteration, delta_t, J, K, coupling_probability)
 
     def draw(self):
         size = 10
-
         self.canvas.delete('all')
 
-        for i in range(len(self.positions)):
-            # color based on swarmalator phase
-            c_val = self.phases[i] / (2.0 * math.pi) % (2.0 * math.pi)
-            c_rgb = colorsys.hsv_to_rgb(c_val, 1, 1)
-            c_int = tuple(int(t * 255) for t in c_rgb)
-            c_hex = '#%02x%02x%02x' % c_int
+        for i in range(self.num_swarmalators):
+            color = fct.phase_to_hex(self.phases[i])
 
-            x1 = self.positions[i][0] * self.screen_size / 4 + self.screen_size / 2
-            y1 = self.positions[i][1] * self.screen_size / 4 + self.screen_size / 2
+            x1 = self.screen_size * (self.positions[i][0] + 2.0) / 4.0
+            y1 = self.screen_size * (self.positions[i][1] + 2.0) / 4.0
             x2 = x1 + size
             y2 = y1 + size
 
-            self.canvas.create_oval(x1, y1, x2, y2, fill=c_hex, tags='s' + str(i))  
+            self.canvas.create_oval(x1, y1, x2, y2, fill=color, tags='s' + str(i))  

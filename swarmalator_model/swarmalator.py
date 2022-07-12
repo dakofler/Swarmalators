@@ -1,6 +1,8 @@
 import random as rnd
 import math
 import numpy as np
+import time
+
 
 class Swarmalator:
     def __init__(self, id, num_swarmalators, memory_init):
@@ -23,11 +25,13 @@ class Swarmalator:
             self.positions[self.id][1] = rnd.random() * 2 - 1
             self.phases[self.id] = rnd.uniform(0.0, 2.0 * math.pi)           
        
-    def run(self, list_of_swarmalators, positions, phases, delta_t, J, K, coupling_probability):
-        self.scan(list_of_swarmalators, coupling_probability)
-        self.think(J, K)
-        self.move(delta_t)
-        self.yell(positions, phases)
+    def run(self, positions, phases, delta_t, J, K, coupling_probability):
+        # while true:
+            self.scan(positions, phases, coupling_probability)
+            self.think(J, K)
+            self.move(delta_t)
+            self.yell(positions, phases)
+            # time.sleep(delta_t)
 
     def move(self, delta_t):  
         self.positions[self.id] = self.positions[self.id] + self.velocity * delta_t # compute next position the swarmalator moves to
@@ -37,7 +41,7 @@ class Swarmalator:
         v_temp = np.zeros(2)
         p_temp = 0.0
 
-        for i in range(len(self.positions)):
+        for i in range(self.num_swarmalators):
             if i != self.id:
                 d_x = self.positions[i] - self.positions[self.id]
                 d_theta = self.phases[i] - self.phases[self.id]
@@ -49,13 +53,13 @@ class Swarmalator:
         self.velocity = 1 / (len(self.positions)) * v_temp
         self.d_phase = K / (len(self.phases)) * p_temp
 
-    def scan(self, list_of_swarmalators, coupling_probability):
-        for i in range(len(self.positions)):
+    def scan(self, positions, phases, coupling_probability):
+        for i in range(self.num_swarmalators):
             if i != self.id:
                 r = rnd.random()
                 if r <= coupling_probability:
-                    self.positions[i] = list_of_swarmalators[i].positions[i]
-                    self.phases[i] = list_of_swarmalators[i].phases[i]
+                    self.positions[i] = positions[i]
+                    self.phases[i] = phases[i]
     
     def yell(self, positions, phases):
         positions[self.id] = self.positions[self.id]
