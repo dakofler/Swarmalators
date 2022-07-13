@@ -18,11 +18,13 @@ class Environment:
 
     def init_positions_phases(self):
         self.phases = np.zeros(self.num_swarmalators)
-        self.positions = np.zeros((self.num_swarmalators, 2))      
+        self.positions = np.zeros((self.num_swarmalators, 2))
+        self.velocities = np.zeros((self.num_swarmalators, 2))        
 
         for i, s in enumerate(self.list_of_swarmalators):
             self.positions[i] = s.positions[i]
             self.phases[i] = s.phases[i]
+            self.velocities[i] = s.velocity
 
     def init_canvas(self):
         self.canvas = tk.Canvas(self.sim, width=self.screen_size, height=self.screen_size)
@@ -65,7 +67,7 @@ class Environment:
         start = time.time()
 
         for s in self.list_of_swarmalators:
-            s.run(self.positions, self.phases, delta_t, J, K, coupling_probability)
+            s.run(self.positions, self.phases, self.velocities, delta_t, J, K, coupling_probability)
 
         self.draw()
         end = time.time()
@@ -83,7 +85,10 @@ class Environment:
 
             x1 = self.screen_size * (self.positions[i][0] + 2.0) / 4.0
             y1 = self.screen_size * (self.positions[i][1] + 2.0) / 4.0
-            x2 = x1 + size
-            y2 = y1 + size
+            diff_vec = self.velocities[i] / np.linalg.norm(self.velocities[i]) * size
+            x2 = x1 + diff_vec[0]
+            y2 = y1 + diff_vec[1]
 
-            self.canvas.create_oval(x1, y1, x2, y2, fill=color, tags='s' + str(i))  
+            self.canvas.create_line(
+                x2, y2, x1, y1, fill=color, tags='s' + str(i),
+                arrow=tk.FIRST, arrowshape=(8 * size / 5, 10 * size / 5, 3 * size / 5))
