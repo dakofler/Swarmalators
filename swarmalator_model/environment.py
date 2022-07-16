@@ -2,9 +2,6 @@ import time
 import numpy as np
 import tkinter as tk
 
-from multiprocessing import Process
-import threading
-
 from swarmalator_model.swarmalator import Swarmalator
 from swarmalator_model import functions as fct
 
@@ -17,13 +14,11 @@ class Environment:
         self.list_of_swarmalators = []
 
     def init_positions_phases(self):
-        self.phases = np.zeros(self.num_swarmalators)
-        self.positions = np.zeros((self.num_swarmalators, 2))
+        self.memory = np.zeros((self.num_swarmalators, 3))
         self.velocities = np.zeros((self.num_swarmalators, 2))        
 
         for i, s in enumerate(self.list_of_swarmalators):
-            self.positions[i] = s.positions[i]
-            self.phases[i] = s.phases[i]
+            self.memory[i] = s.memory[i]
             self.velocities[i] = s.velocity
 
     def init_canvas(self):
@@ -44,22 +39,6 @@ class Environment:
         self.init_positions_phases()
         self.draw()
 
-        # processes = []
-        # threads = []
-
-        # for s in self.list_of_swarmalators:
-            # process = Process(target=s.run, args=(self.list_of_swarmalators, self.positions, self.phases, delta_t, J, K, coupling_probability))
-            # processes.append(process)
-
-            # thread = threading.Thread(target=s.run, args=(self.list_of_swarmalators, self.positions, self.phases, delta_t, J, K, coupling_probability))
-            # threads.append(thread)
-        
-        # for p in processes:
-        #     p.start()
-
-        # for t in threads:
-        #     t.start()
-
         self.iteration(delta_t, J, K, coupling_probability)
         self.sim.mainloop()
 
@@ -67,9 +46,9 @@ class Environment:
         start = time.time()
 
         for s in self.list_of_swarmalators:
-            s.run(self.positions, self.phases, self.velocities, delta_t, J, K, coupling_probability)
-
+            s.run(self.memory, self.velocities, delta_t, J, K, coupling_probability)
         self.draw()
+
         end = time.time()
         print(f'step={round((end - start) * 1000)}ms')
 
@@ -81,10 +60,11 @@ class Environment:
         self.canvas.delete('all')
 
         for i in range(self.num_swarmalators):
-            color = fct.phase_to_hex(self.phases[i])
+            color = fct.phase_to_hex(self.memory[i][2])
 
-            x1 = self.screen_size * (self.positions[i][0] + 2.0) / 4.0
-            y1 = self.screen_size * (self.positions[i][1] + 2.0) / 4.0
+            x1 = self.screen_size * (self.memory[i][0] + 2.0) / 4.0
+            y1 = self.screen_size * (self.memory[i][1] + 2.0) / 4.0
+
             diff_vec = self.velocities[i] / np.linalg.norm(self.velocities[i]) * size
             x2 = x1 + diff_vec[0]
             y2 = y1 + diff_vec[1]

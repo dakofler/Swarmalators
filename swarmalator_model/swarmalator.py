@@ -14,28 +14,27 @@ class Swarmalator:
 
         # initialize memories with random values
         if memory_init == 'rand':
-            self.phases = np.random.rand(num_swarmalators) * 2.0 * math.pi #phase-vector
-            self.positions = np.random.rand(num_swarmalators, 2) * 2.0 - 1.0 #position-array
+            memory_positions = np.random.rand(num_swarmalators, 2) * 2.0 - 1.0 #position-array
+            memory_phases = np.random.rand(num_swarmalators) * 2.0 * math.pi #phase-vector
+            memory_phases = memory_phases.reshape((num_swarmalators, 1))
+            self.memory = np.concatenate((memory_positions, memory_phases), axis=1)
         else:
-            self.phases = np.zeros(num_swarmalators) #phase-vector
-            self.positions = np.zeros((num_swarmalators, 2)) #position-vector
+            self.info = np.zeros((num_swarmalators, 3)) #position-phase-array
 
             # initialize own position and phase randomly
-            self.positions[self.id][0] = rnd.random() * 2.0 - 1.0
-            self.positions[self.id][1] = rnd.random() * 2.0 - 1.0
-            self.phases[self.id] = rnd.uniform(0.0, 2.0 * math.pi)           
+            self.memory[self.id][0] = rnd.random() * 2.0 - 1.0
+            self.memory[self.id][1] = rnd.random() * 2.0 - 1.0
+            self.memory[self.id][2] = rnd.uniform(0.0, 2.0 * math.pi)
        
-    def run(self, positions, phases, velocities, delta_t, J, K, coupling_probability):
-        # while true:
-            self.scan(positions, phases, coupling_probability)
-            self.think(J, K)
-            self.move(delta_t)
-            self.yell(positions, phases, velocities)
-            # time.sleep(delta_t)
+    def run(self, env_memory, env_velocities, delta_t, J, K, coupling_probability):
+        self.scan(env_memory, coupling_probability)
+        self.think(J, K)
+        self.move(delta_t)
+        self.yell(env_memory, env_velocities)
 
-    def move(self, delta_t):  
-        self.positions[self.id] = self.positions[self.id] + self.velocity * delta_t # compute next position the swarmalator moves to
-        self.phases[self.id] = (self.phases[self.id] + self.d_phase * delta_t) % (2.0 * math.pi) # update phase
+    def move(self, delta_t):
+        self.memory[self.id][:2] = self.memory[self.id][:2]  + self.velocity * delta_t # compute next position the swarmalator moves to
+        self.memory[self.id][2] = (self.memory[self.id][2] + self.d_phase * delta_t) % (2.0 * math.pi) # update phase
     
     def think(self, J, K):
         v_temp = np.zeros(2)
@@ -43,25 +42,23 @@ class Swarmalator:
 
         for i in range(self.num_swarmalators):
             if i != self.id:
-                d_x = self.positions[i] - self.positions[self.id]
-                d_theta = self.phases[i] - self.phases[self.id]
-                d_x_norm = np.linalg.norm(d_x)
+                d_position = self.memory[i][:2] - self.memory[self.id][:2]
+                d_phase = self.memory[i][2] - self.memory[self.id][2]
+                d_pos_norm = np.linalg.norm(d_position)
                 
-                v_temp += d_x / d_x_norm * ((1.0 + J * math.cos(d_theta)) - 1.0 / d_x_norm)
-                p_temp += math.sin(d_theta) / d_x_norm
+                v_temp += d_position / d_pos_norm * ((1.0 + J * math.cos(d_phase)) - 1.0 / d_pos_norm)
+                p_temp += math.sin(d_phase) / d_pos_norm
 
         self.velocity = 1 / self.num_swarmalators * v_temp
         self.d_phase = K / self.num_swarmalators * p_temp
 
-    def scan(self, positions, phases, coupling_probability):
+    def scan(self, memory, coupling_probability):
         for i in range(self.num_swarmalators):
             if i != self.id:
                 r = rnd.random()
                 if r <= coupling_probability:
-                    self.positions[i] = positions[i]
-                    self.phases[i] = phases[i]
+                    self.memory[i] = memory[i]
     
-    def yell(self, positions, phases, velocities):
-        positions[self.id] = self.positions[self.id]
-        phases[self.id] = self.phases[self.id]
-        velocities[self.id] = self.velocity
+    def yell(self, env_memory, env_velocities):
+        env_memory[self.id] = self.memory[self.id]
+        env_velocities[self.id] = self.velocity
