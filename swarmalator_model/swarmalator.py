@@ -20,10 +20,11 @@ class Swarmalator:
         self.id = id
         self.num_swarmalators = num_swarmalators
         self.velocity = np.ones(2)
-        self.d_phase = 0
-        self.init_memory(memory_init)
+        self.phase_change = 0
+        self.memory_init = memory_init if memory_init in ['zeroes', 'random', 'gradual'] else 'random'
+        self.init_memory()
     
-    def init_memory(self, memory_init: str):
+    def init_memory(self):
         '''
         Initializes swarmalator memory.
 
@@ -32,17 +33,20 @@ class Swarmalator:
         memory_init : {'random', 'zeroes'}
             Method of swarmalator memory initialization. `rand` (random positions and phases) `zero` (initialize positions and phases as 0)
         '''
-        if memory_init == 'random': # initialize memories with random values
-            memory_positions = np.random.rand(self.num_swarmalators, 2) * 2.0 - 1.0 #position-array
-            memory_phases = np.random.rand(self.num_swarmalators) * 2.0 * math.pi #phase-vector
-            memory_phases = memory_phases.reshape((self.num_swarmalators, 1))
-            self.memory = np.concatenate((memory_positions, memory_phases), axis=1)
-        else: # initialize memories with zeros
+        if self.memory_init == 'zeroes' or self.memory_init == 'gradual':
+            # initialize memories with zeros
             self.memory = np.zeros((self.num_swarmalators, 3)) #position-phase-array
             # initialize own position and phase randomly
             self.memory[self.id][0] = rnd.random() * 2.0 - 1.0
             self.memory[self.id][1] = rnd.random() * 2.0 - 1.0
             self.memory[self.id][2] = rnd.uniform(0.0, 2.0 * math.pi)
+            
+        elif self.memory_init == 'random':
+            # initialize memorywith random values
+            memory_positions = np.random.rand(self.num_swarmalators, 2) * 2.0 - 1.0 #position-array
+            memory_phases = np.random.rand(self.num_swarmalators) * 2.0 * math.pi #phase-vector
+            memory_phases = memory_phases.reshape((self.num_swarmalators, 1))
+            self.memory = np.concatenate((memory_positions, memory_phases), axis=1)
 
     def run(self, env_memory, env_velocities, delta_t: float, J: float, K: float, coupling_probability: float):
         '''
@@ -96,19 +100,25 @@ class Swarmalator:
         K : float
             Phase coupling strength. For K>0 swarmalators try to minimize their phase difference. For K<0 the difference is maximized.
         '''
+        # compute all x_j - x_i
         d_pos = self.memory[:, :2] - self.memory[self.id][:2]
         d_pos = np.delete(d_pos, self.id, axis=0)
 
+        # compute all theta_j - theta_i
         d_pha = self.memory[:, 2] - self.memory[self.id][2]
         d_pha = np.delete(d_pha, self.id, axis=0)
 
+        # comute all |x_j - x_i|
         norms = np.linalg.norm(d_pos, axis=1).reshape((self.num_swarmalators - 1, 1))
 
+        # compute all x_i' summands
         x_dot_vals = d_pos / norms * ((1.0 + J * np.cos(d_pha).reshape((self.num_swarmalators - 1, 1))) - 1.0 / norms)
+
+        # compute all theta_i' summands
         p_dot_vals = np.sin(d_pha).reshape((self.num_swarmalators - 1, 1)) / norms
 
         self.velocity = np.sum(x_dot_vals, axis=0) / self.num_swarmalators
-        self.d_phase = np.sum(p_dot_vals, axis=0) * K / self.num_swarmalators
+        self.phase_change = np.sum(p_dot_vals, axis=0) * K / self.num_swarmalators
 
     def move(self, delta_t: float):
         '''
@@ -119,8 +129,8 @@ class Swarmalator:
         delta_t : float
             Time step of an iteration.
         '''
-        self.memory[self.id][:2] = self.memory[self.id][:2]  + self.velocity * delta_t # compute next position the swarmalator moves to
-        self.memory[self.id][2] = (self.memory[self.id][2] + self.d_phase * delta_t) % (2.0 * math.pi) # update phase
+        self.memory[self.id][:2] = self.memory[self.id][:2]  + self.velocity * delta_t # compute and set new position
+        self.memory[self.id][2] = (self.memory[self.id][2] + self.phase_change * delta_t) % (2.0 * math.pi) # compute and set new phase
     
     def yell(self, env_memory, env_velocities):
         '''

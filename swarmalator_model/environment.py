@@ -20,9 +20,11 @@ class Environment:
             Window size of the tkinter canvas. default=`1000`
         '''
         self.num_swarmalators = num_swarmalators
-        self.memory_init = memory_init if memory_init in ['random', 'zeroes'] else 'random'
+        self.memory_init = memory_init
         self.screen_size = screen_size
         self.list_of_swarmalators = []
+        self.iteration = 1
+        self.simulaton_time = 0
 
     def init_positions_phases(self):
         '''
@@ -73,10 +75,10 @@ class Environment:
         self.init_positions_phases()
         self.draw()
 
-        self.iteration(delta_t, J, K, coupling_probability)
+        self.iterate(delta_t, J, K, coupling_probability)
         self.sim.mainloop()
 
-    def iteration(self, delta_t: float, J: float, K: float, coupling_probability: float):
+    def iterate(self, delta_t: float, J: float, K: float, coupling_probability: float):
         '''
         Makes each swarmalator perform an interation of syncing and moving.
 
@@ -91,6 +93,7 @@ class Environment:
         coupling_probability : float
             Probability that a swarmalator successfully receives information about another swarmalators position and phase.
         '''
+        
         start = time.time()
 
         for s in self.list_of_swarmalators:
@@ -101,9 +104,12 @@ class Environment:
         comp_time = int((end - start) * 1000)
         dt = int(delta_t * 1000)
         wait_time = int(max(dt - comp_time, 1))
-        print(f'comp_time={comp_time}ms, step={wait_time + comp_time}ms')
+        step_time = wait_time + comp_time
 
-        self.canvas.after(wait_time, self.iteration, delta_t, J, K, coupling_probability)
+        self.simulaton_time += delta_t
+        print(f'iteration={self.iteration}      comp_time={comp_time}ms     step_time={step_time}ms     sim_time={round(self.simulaton_time, 2)}s')
+        self.iteration += 1
+        self.canvas.after(wait_time, self.iterate, delta_t, J, K, coupling_probability)
 
     def draw(self):
         '''
