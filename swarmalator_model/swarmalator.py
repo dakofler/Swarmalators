@@ -100,25 +100,30 @@ class Swarmalator:
         K : float
             Phase coupling strength. For K>0 swarmalators try to minimize their phase difference. For K<0 the difference is maximized.
         '''
+        temp_mem = self.memory.copy()
+        temp_mem = np.delete(temp_mem, self.id, axis=0)
+        if self.memory_init == 'gradual': temp_mem = temp_mem[~np.all(temp_mem == 0, axis=1)]
+        n = len(temp_mem)
+        if n == 0: return
+
         # compute all x_j - x_i
-        d_pos = self.memory[:, :2] - self.memory[self.id][:2]
-        d_pos = np.delete(d_pos, self.id, axis=0)
+        delta_pos = temp_mem[:, :2] - self.memory[self.id][:2]
 
         # compute all theta_j - theta_i
-        d_pha = self.memory[:, 2] - self.memory[self.id][2]
-        d_pha = np.delete(d_pha, self.id, axis=0)
+        delta_pha = temp_mem[:, 2] - self.memory[self.id][2]
+        delta_pha = delta_pha.reshape((n, 1))
 
         # comute all |x_j - x_i|
-        norms = np.linalg.norm(d_pos, axis=1).reshape((self.num_swarmalators - 1, 1))
+        norms = np.linalg.norm(delta_pos, axis=1).reshape((n, 1))
 
         # compute all x_i' summands
-        x_dot_vals = d_pos / norms * ((1.0 + J * np.cos(d_pha).reshape((self.num_swarmalators - 1, 1))) - 1.0 / norms)
+        velocity_vals = delta_pos / norms * ((1.0 + J * np.cos(delta_pha)) - 1.0 / norms)
 
         # compute all theta_i' summands
-        p_dot_vals = np.sin(d_pha).reshape((self.num_swarmalators - 1, 1)) / norms
+        phase_change_vals = np.sin(delta_pha) / norms
 
-        self.velocity = np.sum(x_dot_vals, axis=0) / self.num_swarmalators
-        self.phase_change = np.sum(p_dot_vals, axis=0) * K / self.num_swarmalators
+        self.velocity = np.sum(velocity_vals, axis=0) / n
+        self.phase_change = np.sum(phase_change_vals, axis=0) * K / n
 
     def move(self, delta_t: float):
         '''
