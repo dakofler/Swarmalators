@@ -138,7 +138,6 @@ class Environment:
             y_x1 = self.screen_size / 6 * i
             y_y1 = self.screen_size
 
-
             if i == 3:
                 # x axis
                 self.canvas.create_line(x_x0, x_y0, x_x1, x_y1)
