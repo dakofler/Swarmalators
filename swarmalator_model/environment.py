@@ -1,6 +1,8 @@
 import time
 import numpy as np
 import tkinter as tk
+
+from sqlalchemy import null
 from swarmalator_model.swarmalator import Swarmalator
 from swarmalator_model import functions as fct
 
@@ -20,7 +22,12 @@ class Environment:
             Window size of the tkinter canvas. default=`1000`
         '''
         self.num_swarmalators = num_swarmalators
-        self.memory_init = memory_init
+
+        if memory_init in ['zeroes', 'random', 'gradual']: self.memory_init = memory_init
+        else:
+            self.memory_init = 'random'
+            print('Unknown memory init method.\nMust be "zeroes", "random" or "gradual".\nMethod was set to "random"')
+
         self.screen_size = screen_size
         self.list_of_swarmalators = []
         self.iteration = 1
@@ -70,6 +77,7 @@ class Environment:
             Probability that a swarmalator successfully receives information about another swarmalators position and phase. default=`0.1`
         '''
         self.sim = tk.Tk()
+        self.sim.title('Swarmalators')
         self.init_canvas()
         self.add_swarmalators()
         self.init_positions_phases()
@@ -107,7 +115,7 @@ class Environment:
         step_time = wait_time + comp_time
 
         self.simulaton_time += delta_t
-        print(f'iteration={self.iteration}      comp_time={comp_time}ms     step_time={step_time}ms     sim_time={round(self.simulaton_time, 2)}s')
+        print(f'iteration={self.iteration}\tcomp_time={comp_time}ms\tstep_time={step_time}ms\tsim_time={round(self.simulaton_time, 2)}s')
         self.iteration += 1
         self.canvas.after(wait_time, self.iterate, delta_t, J, K, coupling_probability)
 
@@ -118,6 +126,31 @@ class Environment:
         size = 10
         self.canvas.delete('all')
 
+        # draw x-axis
+        for i in range(1, 6):
+            x_x0 = 0
+            x_y0 = self.screen_size / 6 * i
+            x_x1 = self.screen_size
+            x_y1 = self.screen_size / 6 * i
+
+            y_x0 = self.screen_size / 6 * i
+            y_y0 = 0
+            y_x1 = self.screen_size / 6 * i
+            y_y1 = self.screen_size
+
+
+            if i == 3:
+                # x axis
+                self.canvas.create_line(x_x0, x_y0, x_x1, x_y1)
+                for j in range(1, 6): self.canvas.create_text(self.screen_size / 6 * j + 15, self.screen_size / 2 + 15, text=str((j - 3) / 2))
+                
+                # y axis
+                self.canvas.create_line(y_x0, y_y0, y_x1, y_y1)
+            else:
+                self.canvas.create_line(x_x0, x_y0, x_x1, x_y1, dash=(2, 2))
+                self.canvas.create_line(y_x0, y_y0, y_x1, y_y1, dash=(2, 2))
+
+        # draw swarmalators
         for i in range(self.num_swarmalators):
             color = fct.phase_to_hex(self.memory[i][2])
 

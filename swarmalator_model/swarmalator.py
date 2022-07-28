@@ -21,7 +21,7 @@ class Swarmalator:
         self.num_swarmalators = num_swarmalators
         self.velocity = np.ones(2)
         self.phase_change = 0
-        self.memory_init = memory_init if memory_init in ['zeroes', 'random', 'gradual'] else 'random'
+        self.memory_init = memory_init
         self.init_memory()
     
     def init_memory(self):
