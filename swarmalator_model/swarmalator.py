@@ -39,12 +39,12 @@ class Swarmalator:
             # initialize own position and phase randomly
             self.memory[self.id][0] = rnd.random() * 2.0 - 1.0
             self.memory[self.id][1] = rnd.random() * 2.0 - 1.0
-            self.memory[self.id][2] = rnd.uniform(0.0, 2.0 * math.pi)
+            self.memory[self.id][2] = rnd.uniform(-math.pi, math.pi)
             
         elif self.memory_init == 'random':
             # initialize memorywith random values
             memory_positions = np.random.rand(self.num_swarmalators, 2) * 2.0 - 1.0 #position-array
-            memory_phases = np.random.rand(self.num_swarmalators) * 2.0 * math.pi #phase-vector
+            memory_phases = np.random.rand(self.num_swarmalators) * 2.0 * math.pi - math.pi #phase-vector
             memory_phases = memory_phases.reshape((self.num_swarmalators, 1))
             self.memory = np.concatenate((memory_positions, memory_phases), axis=1)
 
@@ -135,7 +135,11 @@ class Swarmalator:
             Time step of an iteration.
         '''
         self.memory[self.id][:2] = self.memory[self.id][:2]  + self.velocity * delta_t # compute and set new position
-        self.memory[self.id][2] = (self.memory[self.id][2] + self.phase_change * delta_t) % (2.0 * math.pi) # compute and set new phase
+
+        p = self.memory[self.id][2] + self.phase_change * delta_t
+        if p > math.pi: p -= 2 * math.pi
+        if p < -math.pi: p += 2 * math.pi
+        self.memory[self.id][2] = p # compute and set new phase
     
     def yell(self, env_memory, env_velocities):
         '''
