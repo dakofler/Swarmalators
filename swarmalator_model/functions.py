@@ -1,6 +1,7 @@
 import numpy as np
 import colorsys
 
+
 def phase_to_hex(phase: float):
     '''
     Returns a hex color code based on an input phase value.

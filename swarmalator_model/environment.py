@@ -1,8 +1,6 @@
 import time
 import numpy as np
 import tkinter as tk
-
-from sqlalchemy import null
 from swarmalator_model.swarmalator import Swarmalator
 from swarmalator_model import functions as fct
 
@@ -123,38 +121,38 @@ class Environment:
         '''
         Draws swarmalators on the canvas.
         '''
-        size = 10
+        areas = 8
+        size = self.screen_size / 100
         self.canvas.delete('all')
 
-        # draw x-axis
-        for i in range(1, 6):
-            x_x0 = 0
-            x_y0 = self.screen_size / 6 * i
-            x_x1 = self.screen_size
-            x_y1 = self.screen_size / 6 * i
+        # draw coordinate axis
+        for i in range(1, areas):
+            x_x0 = y_y0 = 0
+            x_y0 = x_y1 = y_x0 = y_x1 = self.screen_size / areas * i
+            x_x1 = y_y1 = self.screen_size
 
-            y_x0 = self.screen_size / 6 * i
-            y_y0 = 0
-            y_x1 = self.screen_size / 6 * i
-            y_y1 = self.screen_size
-
-            if i == 3:
-                # x axis
-                self.canvas.create_line(x_x0, x_y0, x_x1, x_y1)
-                for j in range(1, 6): self.canvas.create_text(self.screen_size / 6 * j + 15, self.screen_size / 2 + 15, text=str((j - 3) / 2))
+            if i == areas / 2:
+                # main x axis
+                self.canvas.create_line(x_x0, x_y0, x_x1, x_y1, width=2)
+                for j in range(1, areas): self.canvas.create_text(self.screen_size / areas * j + 15, self.screen_size / 2 + 15, text=str(j * 4 / areas - 2))
                 
-                # y axis
-                self.canvas.create_line(y_x0, y_y0, y_x1, y_y1)
+                # main y axis
+                self.canvas.create_line(y_x0, y_y0, y_x1, y_y1, width=2)
+                for j in range(1, areas):
+                    if j != areas / 2: self.canvas.create_text(self.screen_size / 2 + 15, self.screen_size / areas * j + 15, text=str(-(j * 4 / areas - 2)))
             else:
+                # helper x axis
                 self.canvas.create_line(x_x0, x_y0, x_x1, x_y1, dash=(2, 2))
+
+                # helper y axis
                 self.canvas.create_line(y_x0, y_y0, y_x1, y_y1, dash=(2, 2))
 
         # draw swarmalators
         for i in range(self.num_swarmalators):
             color = fct.phase_to_hex(self.memory[i][2])
 
-            x1 = self.screen_size * (self.memory[i][0] + 2.0) / 4.0
-            y1 = self.screen_size * (self.memory[i][1] + 2.0) / 4.0
+            x1 = self.screen_size * ((self.memory[i][0] + 2.0 ) / 4.0)
+            y1 = self.screen_size * ((self.memory[i][1] + 2.0 ) / 4.0)
 
             diff_vec = self.velocities[i] / np.linalg.norm(self.velocities[i]) * size
             x2 = x1 + diff_vec[0]
