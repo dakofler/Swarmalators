@@ -49,6 +49,8 @@ class Environment:
         '''
         Initializes the environment canvas object.
         '''       
+        self.sim = tk.Tk()
+        
         self.lbl_plot_title = tk.Label(self.sim, text=f'Swarmalator {sim_mode}', font=("Arial", 14))
         self.lbl_plot_title.grid(row=0, column=0, columnspan=3)
         
@@ -70,6 +72,7 @@ class Environment:
         self.lbl_comp_time = tk.Label(self.sim, text=f'comp_time = 0 s')
         self.lbl_comp_time.grid(row=3, column=2)
 
+        self.sim.title('Swarmalators')
         self.sim.resizable(False, False)
 
     def pause_simulation(self):
@@ -115,10 +118,11 @@ class Environment:
         if sim_mode not in ['positions', 'phases']:
             print('Bad sim_mode. Must be "positions" or "phases".')
             return        
-        
-        self.sim = tk.Tk()
-        self.sim.title('Swarmalators')
+
         self.paused = False
+        self.iteration = 1
+        self.simulaton_time = 0
+
         self.init_canvas(sim_mode)
         self.add_swarmalators()
         self.init_positions_phases()
@@ -165,7 +169,7 @@ class Environment:
             self.lbl_sim_time['text'] = f'sim_time = {round(self.simulaton_time, 1)} s'
             self.lbl_comp_time['text'] = f'step_comp_time = {round(comp_time, 0)} ms'
 
-            # ToDo: log positions, phases and potetial calculated variables (change in velocity for convergence)
+            # ToDo: log positions, phases and potential calculated variables (change in velocity for convergence)
 
             self.iteration += 1
 
