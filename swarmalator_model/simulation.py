@@ -1,14 +1,15 @@
 import time
+import math
 import numpy as np
 import tkinter as tk
-import math
-import pandas as pd
+
 from swarmalator_model.swarmalator import Swarmalator
-from swarmalator_model import functions as fct
+from swarmalator_model.dataset import Dataset
+from swarmalator_model import helper as hlp
 
 
 class Simulation:
-    def __init__(self, plot_size: int ='1000'):
+    def __init__(self, plot_size: int ='1000', logging: bool=False):
         '''
         Instantiates the environment for a swarmalator-simulation.
 
@@ -18,13 +19,63 @@ class Simulation:
             Size of the tkinter canvas. default=`1000`
         '''
         self.plot_size = plot_size
+        self.logging = logging
+
+        self.memory_log = []
+        self.velocity_log = []
+
         self.list_of_swarmalators = []
         self.iteration = 1
         self.simulaton_time = 0
+        self.comp_time = 0
         self.paused = False
         self.stopped = True
         self.init_canvas()
 
+    #region Core functions
+    def run_simulation(self):
+        '''
+        Starts the main loop.
+        '''
+        self.draw_coordinate_system()
+        self.sim.mainloop()
+
+    def step(self):
+        '''
+        Makes each swarmalator perform one step of syncing and moving.
+        '''
+        wait_time = int(self.time_step * 1000)
+        self.simulation_type = str(self.var_plot_type.get()) # read simulation type input to make live-switching possible
+
+        if not self.stopped:
+            if not self.paused:
+                start = time.time()
+
+                # update swarmalators
+                for s in self.list_of_swarmalators:
+                    s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability)
+                self.draw_swarmalators()
+
+                # log time
+                end = time.time()
+                self.comp_time = int((end - start) * 1000)
+                dt = int(self.time_step * 1000)
+                wait_time = int(max(dt - self.comp_time, 1))
+                self.simulaton_time += self.time_step
+
+                # write data to labels
+                self.update_labels()
+
+                # logging
+                if self.logging: self.log()
+
+                self.iteration += 1
+
+            self.canvas.after(wait_time, self.step)
+
+    #endregion
+
+    #region Initialization
     def init_canvas(self):
         '''
         Initializes the environment canvas object.
@@ -109,6 +160,29 @@ class Simulation:
         self.sim.title('Swarmalators')
         self.sim.resizable(False, False)
 
+    def init_positions_phases(self):
+        '''
+        Initializes the environment memory with swarmalator positons, phases and velocities.
+        '''
+        self.memory = np.zeros((self.num_swarmalators, 3))
+        self.velocities = np.zeros((self.num_swarmalators, 2))
+
+        for i, s in enumerate(self.list_of_swarmalators):
+            self.memory[i] = s.memory[i]
+            self.velocities[i] = s.velocity
+
+    def init_swarmalators(self):
+        '''
+        Adds new swarmalator objects to the envionment.
+        '''
+        self.list_of_swarmalators.clear()
+        for n in range(self.num_swarmalators):
+            s = Swarmalator(n, self.num_swarmalators, self.memory_init)
+            self.list_of_swarmalators.append(s)
+
+    #endregion
+
+    #region Updating
     def read_inputs(self):
         '''
         Reads values from the input control elements.
@@ -126,13 +200,14 @@ class Simulation:
             print('Error reading inputs.')
             return False
 
-    def run_simulation(self):
-        '''
-        Starts the main loop.
-        '''
-        self.draw_coordinate_system()
-        self.sim.mainloop()
-    
+    def update_labels(self):
+        self.lbl_iteration['text'] = f'iteration = {self.iteration}'
+        self.lbl_sim_time['text'] = f'sim_time = {round(self.simulaton_time, 1)} s'
+        self.lbl_comp_time['text'] = f'step_comp_time = {round(self.comp_time, 0)} ms'
+
+    #endregion
+
+    #region Button Events
     def start_simulation(self):
         '''
         Starts a simulation run.
@@ -142,6 +217,8 @@ class Simulation:
         self.stopped = False
         self.iteration = 1
         self.simulaton_time = 0
+        self.memory_log.clear()
+        self.velocity_log.clear()
         self.btn_pause['text'] = 'Pause Simulation'
         self.btn_start.config(state='disabled')
         self.btn_stop.config(state='active')
@@ -168,76 +245,17 @@ class Simulation:
             self.paused = not self.paused
             if self.paused: self.btn_pause['text'] = 'Resume Simulation'
             else: self.btn_pause['text'] = 'Pause Simulation'
-
-    def init_positions_phases(self):
-        '''
-        Initializes the environment memory with swarmalator positons, phases and velocities.
-        '''
-        self.memory = np.zeros((self.num_swarmalators, 3))
-        self.velocities = np.zeros((self.num_swarmalators, 2))
-
-        for i, s in enumerate(self.list_of_swarmalators):
-            self.memory[i] = s.memory[i]
-            self.velocities[i] = s.velocity
-
+    
     def save_data(self):
         '''
-        Shows positions and velocities of each swarmalator.
+        Saves logged information to a Dataset object.
         '''
-        print(pd.DataFrame(self.memory))
-        print(pd.DataFrame(self.velocities))
+        d = Dataset([self.memory_log, self.velocity_log])
+        d.save_to_file()
 
-    def init_swarmalators(self):
-        '''
-        Adds new swarmalator objects to the envionment.
-        '''
-        self.list_of_swarmalators.clear()
-        for n in range(self.num_swarmalators):
-            s = Swarmalator(n, self.num_swarmalators, self.memory_init)
-            self.list_of_swarmalators.append(s)
+    #endregion
 
-    def step(self):
-        '''
-        Makes each swarmalator perform one step of syncing and moving.
-        '''
-        wait_time = int(self.time_step * 1000)
-        self.simulation_type = str(self.var_plot_type.get()) # read simulation type input to make live-switching possible
-
-        if not self.stopped:
-            if not self.paused:
-                start = time.time()
-
-                # update swarmalators
-                for s in self.list_of_swarmalators:
-                    s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability)
-                self.draw()
-
-                # log time
-                end = time.time()
-                comp_time = int((end - start) * 1000)
-                dt = int(self.time_step * 1000)
-                wait_time = int(max(dt - comp_time, 1))
-                self.simulaton_time += self.time_step
-
-                # write data to labels
-                self.lbl_iteration['text'] = f'iteration = {self.iteration}'
-                self.lbl_sim_time['text'] = f'sim_time = {round(self.simulaton_time, 1)} s'
-                self.lbl_comp_time['text'] = f'step_comp_time = {round(comp_time, 0)} ms'
-
-                # ToDo: log positions, phases and potential calculated variables (change in velocity for convergence)
-
-                self.iteration += 1
-
-            self.canvas.after(wait_time, self.step)
-
-    def draw(self):
-        '''
-        Draws swarmalators on the canvas.
-        '''
-        self.canvas.delete("s")
-        if self.simulation_type == 'positions': self.draw_positions()
-        else: self.draw_phases()
-
+    #region Drawing
     def draw_coordinate_system(self):
         '''
         Draws a coordinate system on the canvas.
@@ -265,13 +283,21 @@ class Simulation:
                 self.canvas.create_line(x_x0, x_y0, x_x1, x_y1, dash=(2, 2)) # helper x axis
                 self.canvas.create_line(y_x0, y_y0, y_x1, y_y1, dash=(2, 2)) # helper y axis
 
+    def draw_swarmalators(self):
+        '''
+        Draws swarmalators on the canvas.
+        '''
+        self.canvas.delete("s")
+        if self.simulation_type == 'positions': self.draw_positions()
+        else: self.draw_phases()
+
     def draw_positions(self):
         '''
         Draws swarmalators on the canvas based on their position.
         '''
         size = self.plot_size / 120
         for i in range(self.num_swarmalators):
-            color = fct.phase_to_hex(self.memory[i][2])
+            color = hlp.phase_to_hex(self.memory[i][2])
 
             x1 = self.plot_size * ((self.memory[i][0] + 2.0 ) / 4.0)
             y1 = (self.plot_size * ((-self.memory[i][1] + 2.0 ) / 4.0))
@@ -301,3 +327,11 @@ class Simulation:
             y2 = y1 + size
 
             self.canvas.create_oval(x1, y1, x2, y2, fill='black', tags='s')
+    #endregion
+
+    #region Other
+    def log(self):
+        self.memory_log.append(self.memory)
+        self.velocity_log.append(self.velocities)
+    
+    #endregion
