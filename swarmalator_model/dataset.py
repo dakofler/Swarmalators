@@ -13,3 +13,7 @@ class Dataset():
         filename = 'sim_data\\dataset_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         with open(filename, 'wb') as fp:
             pickle.dump(self, fp)
+    
+    def summary(self):
+        print(f'Number of swarmalators: {len(self.memory[0])}')
+        print(f'Simulation iterations: {len(self.memory)}')

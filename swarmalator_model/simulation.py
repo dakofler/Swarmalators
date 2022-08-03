@@ -75,6 +75,13 @@ class Simulation:
 
     #endregion
 
+    #region Other
+    def log(self):
+        self.memory_log.append(self.memory.copy())
+        self.velocity_log.append(self.velocities.copy())
+    
+    #endregion
+
     #region Initialization
     def init_canvas(self):
         '''
@@ -250,8 +257,8 @@ class Simulation:
         '''
         Saves logged information to a Dataset object.
         '''
-        d = Dataset([self.memory_log, self.velocity_log])
-        d.save_to_file()
+        data = [self.memory_log, self.velocity_log]
+        Dataset(data).save_to_file()
 
     #endregion
 
@@ -329,9 +336,4 @@ class Simulation:
             self.canvas.create_oval(x1, y1, x2, y2, fill='black', tags='s')
     #endregion
 
-    #region Other
-    def log(self):
-        self.memory_log.append(self.memory)
-        self.velocity_log.append(self.velocities)
-    
-    #endregion
+
