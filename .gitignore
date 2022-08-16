@@ -2,3 +2,4 @@ swarmalator_model/__pycache__
 .vscode/
 sim_data/*
 test.ipynb
+sympy.ipynb

@@ -257,7 +257,7 @@ class Simulation:
         '''
         Saves logged information to a Dataset object.
         '''
-        data = [self.memory_log, self.velocity_log]
+        data = [self.memory_log, self.velocity_log, round(self.simulaton_time, 2)]
         Dataset(data).save_to_file()
 
     #endregion

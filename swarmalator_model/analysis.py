@@ -2,6 +2,7 @@ from swarmalator_model.dataset import Dataset
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Analysis:
     def __init__(self, dataset: Dataset):
         self.dataset = dataset
