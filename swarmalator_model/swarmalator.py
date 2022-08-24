@@ -48,7 +48,7 @@ class Swarmalator:
             memory_phases = memory_phases.reshape((self.num_swarmalators, 1))
             self.memory = np.concatenate((memory_positions, memory_phases), axis=1)
 
-    def run(self, env_memory, env_velocities, delta_t: float, J: float, K: float, coupling_probability: float):
+    def run(self, env_memory, env_velocities, delta_t: float, J: float, K: float, coupling_probability: float, alpha: float):
         '''
         Makes the swarmalator sync and swarm.
 
@@ -68,7 +68,7 @@ class Swarmalator:
             Probability that a swarmalator successfully receives information about another swarmalators position and phase.
         '''
         self.scan(env_memory, coupling_probability)
-        self.think(J, K)
+        self.think(J, K, alpha)
         self.move(delta_t)
         self.yell(env_memory, env_velocities)
 
@@ -89,7 +89,7 @@ class Swarmalator:
                 if r <= coupling_probability:
                     self.memory[i] = env_memory[i]
 
-    def think(self, J: float, K: float):
+    def think(self, J: float, K: float, alpha: float):
         '''
         The swarmalator computes its velocity and phase change based on information about other swarmalators stored in its memory.
 
@@ -122,8 +122,8 @@ class Swarmalator:
         # compute all theta_i' summands
         phase_change_vals = np.sin(delta_pha) / norms
 
-        self.velocity = np.sum(velocity_vals, axis=0) / n
-        self.phase_change = np.sum(phase_change_vals, axis=0) * K / n
+        self.velocity = np.sum(velocity_vals, axis=0) / n + alpha * self.velocity
+        self.phase_change = np.sum(phase_change_vals, axis=0) * K / n + alpha * self.phase_change
 
     def move(self, delta_t: float):
         '''

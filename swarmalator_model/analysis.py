@@ -13,7 +13,10 @@ class Analysis:
         self.phases = np.array(self.dataset.memory)[:, :, 2]
         self.velocities = np.array(self.dataset.velocities)
     
-    def plot_avg_velocity(self):
+    def plot_avg_speed(self):
         y = np.average(np.linalg.norm(self.velocities, axis=2), axis=1).tolist()
         x = np.arange(1, len(y) + 1)
-        plt.plot(x, y)
+        plt.plot(x, y, )
+        plt.xlabel("iteration")
+        plt.ylabel("average speed")
+        plt.show()

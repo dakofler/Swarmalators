@@ -9,7 +9,15 @@ from swarmalator_model import helper as hlp
 
 
 class Simulation:
-    def __init__(self, plot_size: int ='1000', logging: bool=False):
+    def __init__(self, plot_size: int ='1000', logging: bool=False,
+        num_swarmalators: int=100,
+        memory_init: str='random',
+        time_step: float=0.1,
+        coupling_probability: float=0.1,
+        J: float=0.1,
+        K: float=1.0,
+        plot_type: str='positions',
+        alpha: float=0):
         '''
         Instantiates the environment for a swarmalator-simulation.
 
@@ -17,9 +25,26 @@ class Simulation:
         ----------
         plot_size : int, optional
             Size of the tkinter canvas. default=`1000`
+        Logging : bool, optional
+            Logs positions and velocities for later analysis. default=`False`
+        num_swarmalators : int, optional
+            Number of swarmalators to be added. default=`100`
+        memory_init : string, optional
+            Method for initializing swarmalator memory. default=`random`
+        time_step : float, optional
+            Time step for each iteration in seconds. default=`0.1`
+        J : float, optional
+            Like attracts like strength. default=`0.1`
+        K : float, optional
+            Synchronization strength. default=`1.0`
+        plot_type : string, optional
+            Type of plot. Can be `positions` or `phases`. default=`positions`
+        alpha : float, optional
+            Momentum factor. Must be between 0 and 1. default=`0`
         '''
         self.plot_size = plot_size
         self.logging = logging
+        self.alpha = alpha
 
         self.memory_log = []
         self.velocity_log = []
@@ -30,7 +55,7 @@ class Simulation:
         self.comp_time = 0
         self.paused = False
         self.stopped = True
-        self.init_canvas()
+        self.init_canvas(num_swarmalators, memory_init, time_step, coupling_probability, J, K, plot_type)
 
     #region Core functions
     def run_simulation(self):
@@ -53,7 +78,7 @@ class Simulation:
 
                 # update swarmalators
                 for s in self.list_of_swarmalators:
-                    s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability)
+                    s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability, self.alpha)
                 self.draw_swarmalators()
 
                 # log time
@@ -83,7 +108,7 @@ class Simulation:
     #endregion
 
     #region Initialization
-    def init_canvas(self):
+    def init_canvas(self, num_swarmalators, memory_init, time_step, coupling_probability, J, K, plot_type):
         '''
         Initializes the environment canvas object.
         '''       
@@ -96,12 +121,12 @@ class Simulation:
         # Entry Number of Swarmalators
         tk.Label(self.sim, text='Number of swarmalators').grid(row=0, column=1, sticky='w')
         self.entry_num_swarmalators = tk.Entry(self.sim)
-        self.entry_num_swarmalators.insert(0, "100")
+        self.entry_num_swarmalators.insert(0, str(num_swarmalators))
         self.entry_num_swarmalators.grid(row=0, column=2)
 
         # Entry Memory Init Method
         tk.Label(self.sim, text='Memory initialization').grid(row=1, column=1, sticky='w')
-        self.var_memory_init = tk.StringVar(self.sim, 'random')
+        self.var_memory_init = tk.StringVar(self.sim, memory_init)
         tk.Radiobutton(self.sim, text='random', variable=self.var_memory_init, value='random').grid(row=1, column=2)
         tk.Radiobutton(self.sim, text='zeroes', variable=self.var_memory_init, value='zeroes').grid(row=1, column=3)
         tk.Radiobutton(self.sim, text='gradual', variable=self.var_memory_init, value='gradual').grid(row=1, column=4)
@@ -109,30 +134,30 @@ class Simulation:
         # Entry Time Step
         tk.Label(self.sim, text='Time step in s').grid(row=2, column=1, sticky='w')
         self.entry_time_step = tk.Entry(self.sim)
-        self.entry_time_step.insert(0, "0.1")
+        self.entry_time_step.insert(0, str(time_step))
         self.entry_time_step.grid(row=2, column=2)
 
         # Entry Coupling Probabiltity
         tk.Label(self.sim, text='Coupling probability').grid(row=3, column=1, sticky='w')
         self.entry_coupling_probability = tk.Entry(self.sim)
-        self.entry_coupling_probability.insert(0, "0.1")
+        self.entry_coupling_probability.insert(0, str(coupling_probability))
         self.entry_coupling_probability.grid(row=3, column=2)
 
         # Entry J
         tk.Label(self.sim, text='J').grid(row=4, column=1, sticky='w')
         self.entry_J = tk.Entry(self.sim)
-        self.entry_J.insert(0, "0.1")
+        self.entry_J.insert(0, str(J))
         self.entry_J.grid(row=4, column=2)
 
         # Entry K
         tk.Label(self.sim, text='K').grid(row=5, column=1, sticky='w')
         self.entry_K = tk.Entry(self.sim)
-        self.entry_K.insert(0, "1.0")
+        self.entry_K.insert(0, str(K))
         self.entry_K.grid(row=5, column=2)
 
         # Entry Plot Type
         tk.Label(self.sim, text='Plot type').grid(row=6, column=1, sticky='w')
-        self.var_plot_type = tk.StringVar(self.sim, 'positions')
+        self.var_plot_type = tk.StringVar(self.sim, plot_type)
         tk.Radiobutton(self.sim, text='positions', variable=self.var_plot_type, value='positions', command=self.draw_coordinate_system).grid(row=6, column=2)
         tk.Radiobutton(self.sim, text='phases', variable=self.var_plot_type, value='phases', command=self.draw_coordinate_system).grid(row=6, column=3)
 
