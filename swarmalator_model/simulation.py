@@ -5,7 +5,7 @@ import tkinter as tk
 
 from swarmalator_model.swarmalator import Swarmalator
 from swarmalator_model.dataset import Dataset
-from swarmalator_model import helper as hlp
+from swarmalator_model import helper_functions as hlp
 
 
 class Simulation:
@@ -17,7 +17,8 @@ class Simulation:
         J: float=0.1,
         K: float=1.0,
         plot_type: str='positions',
-        alpha: float=0):
+        alpha: float=0,
+        max_sim_time: float=0):
         '''
         Instantiates the environment for a swarmalator-simulation.
 
@@ -30,7 +31,7 @@ class Simulation:
         num_swarmalators : int, optional
             Number of swarmalators to be added. default=`100`
         memory_init : string, optional
-            Method for initializing swarmalator memory. default=`random`
+            Method for initializing swarmalator memory. Can be `random`, `zeroes` or `gradual`. default=`random`
         time_step : float, optional
             Time step for each iteration in seconds. default=`0.1`
         J : float, optional
@@ -45,6 +46,7 @@ class Simulation:
         self.plot_size = plot_size
         self.logging = logging
         self.alpha = alpha
+        self.max_sim_time = max_sim_time
 
         self.memory_log = []
         self.velocity_log = []
@@ -69,34 +71,37 @@ class Simulation:
         '''
         Makes each swarmalator perform one step of syncing and moving.
         '''
-        wait_time = int(self.time_step * 1000)
-        self.simulation_type = str(self.var_plot_type.get()) # read simulation type input to make live-switching possible
+        if self.simulaton_time <= self.max_sim_time:
+            wait_time = int(self.time_step * 1000)
+            self.simulation_type = str(self.var_plot_type.get()) # read simulation type input to make live-switching possible
 
-        if not self.stopped:
-            if not self.paused:
-                start = time.time()
+            if not self.stopped:
+                if not self.paused:
+                    start = time.time()
 
-                # update swarmalators
-                for s in self.list_of_swarmalators:
-                    s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability, self.alpha)
-                self.draw_swarmalators()
+                    # update swarmalators
+                    for s in self.list_of_swarmalators:
+                        s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability, self.alpha)
+                    self.draw_swarmalators()
 
-                # log time
-                end = time.time()
-                self.comp_time = int((end - start) * 1000)
-                dt = int(self.time_step * 1000)
-                wait_time = int(max(dt - self.comp_time, 1))
-                self.simulaton_time += self.time_step
+                    # log time
+                    end = time.time()
+                    self.comp_time = int((end - start) * 1000)
+                    dt = int(self.time_step * 1000)
+                    wait_time = int(max(dt - self.comp_time, 1))
+                    self.simulaton_time += self.time_step
 
-                # write data to labels
-                self.update_labels()
+                    # write data to labels
+                    self.update_labels()
 
-                # logging
-                if self.logging: self.log()
+                    # logging
+                    if self.logging: self.log()
 
-                self.iteration += 1
+                    self.iteration += 1
 
-            self.canvas.after(wait_time, self.step)
+                self.canvas.after(wait_time, self.step)
+        else:
+            self.stop_simulation()
 
     #endregion
 
@@ -282,7 +287,15 @@ class Simulation:
         '''
         Saves logged information to a Dataset object.
         '''
-        data = [self.memory_log, self.velocity_log, round(self.simulaton_time, 2)]
+        parameters = {
+            'dt' : self.time_step,
+            'j' : self.J,
+            'k' : self.K,
+            'cp' : self.coupling_probability,
+            'a' : self.alpha
+        }
+        
+        data = [self.memory_log, self.velocity_log, round(self.simulaton_time, 2), parameters]
         Dataset(data).save_to_file()
 
     #endregion
@@ -359,6 +372,7 @@ class Simulation:
             y2 = y1 + size
 
             self.canvas.create_oval(x1, y1, x2, y2, fill='black', tags='s')
+    
     #endregion
 
 

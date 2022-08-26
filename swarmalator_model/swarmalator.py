@@ -19,7 +19,7 @@ class Swarmalator:
         '''
         self.id = id
         self.num_swarmalators = num_swarmalators
-        self.velocity = np.ones(2)
+        self.velocity = np.random.rand(2) * 2.0 - 1.0
         self.phase_change = 0
         self.memory_init = memory_init
         self.init_memory()
