@@ -80,7 +80,7 @@ class Simulation:
         Makes each swarmalator perform one step of syncing and moving.
         '''
         if self.simulaton_time <= self.max_simulation_time or self.max_simulation_time == 0.0:
-            wait_time = int(self.time_step * 1000)
+            wait_time = int(self.time_step * 1000.0)
             self.simulation_type = str(self.var_plot_type.get()) # read simulation type input to make live-switching possible
 
             if not self.stopped:
@@ -88,8 +88,7 @@ class Simulation:
                     start = time.time()
 
                     # update swarmalators
-                    for s in self.list_of_swarmalators:
-                        s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability, self.alpha)
+                    for s in self.list_of_swarmalators: s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability, self.alpha)
                     self.__draw_swarmalators()
 
                     # log time
@@ -302,6 +301,7 @@ class Simulation:
         Stops the active simulation run.
         '''
         self.stopped = True
+        self.canvas.delete("s")
         self.btn_start.config(state='active')
         self.btn_stop.config(state='disabled')
 
@@ -391,7 +391,7 @@ class Simulation:
         '''
         Draws swarmalators on the canvas based on their phase.
         '''
-        size = self.plot_size / 100
+        size = self.plot_size / 150
         for i in range(self.num_swarmalators):
             a = math.atan(self.memory[i][1] / self.memory[i][0])
             if self.memory[i][0] < 0 and self.memory[i][1] > 0: a += math.pi

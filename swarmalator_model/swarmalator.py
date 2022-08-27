@@ -84,10 +84,10 @@ class Swarmalator:
             Probability that a swarmalator successfully receives information about another swarmalators position and phase per iteration.
         '''
         for i in range(self.num_swarmalators):
-            if i != self.id:
-                r = rnd.random()
-                if r <= coupling_probability:
-                    self.memory[i] = env_memory[i]
+            if i == self.id: continue
+            r = rnd.random()
+            if r <= coupling_probability:
+                self.memory[i] = env_memory[i]
 
     def __think(self, J: float, K: float, alpha: float):
         '''
@@ -136,7 +136,7 @@ class Swarmalator:
         delta_t : float
             Time step of an iteration in seconds.
         '''
-        self.memory[self.id][:2] = self.memory[self.id][:2]  + self.velocity * delta_t # compute and set new position
+        self.memory[self.id][:2] = self.memory[self.id][:2] + self.velocity * delta_t # compute and set new position
 
         p = self.memory[self.id][2] + self.phase_change * delta_t
         if p > math.pi: p -= 2 * math.pi
