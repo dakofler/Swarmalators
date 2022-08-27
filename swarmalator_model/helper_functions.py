@@ -13,11 +13,11 @@ def phase_to_hex(phase: float):
     Parameters
     ----------
     phase : float
-        Phase-value in the range [0 : 2*PI]
+        Phase-value in the interval (0, 2*PI)
 
     Returns
     ----------
-    string
+    hex_code : string
         Hex color code
     '''
     c_val = (phase + math.pi) / (2.0 * math.pi)
@@ -32,7 +32,7 @@ def load_data(filename: str):
     Parameters
     ----------
     filename : str
-        Filename.
+        Name of the file containing a dataset.
         
     Returns
     ----------
@@ -68,7 +68,7 @@ def plot2D(type: str, x: np.ndarray, y: np.ndarray, x_label: str, y_label: str, 
     })
 
     if type == 'line':
-        fig = px.line(data, x=x_label, y=y_label)
+        fig = px.line(data, x=x_label, y=y_label, title=title)
         fig.show()
 
     elif type == 'scatter':

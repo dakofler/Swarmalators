@@ -12,7 +12,7 @@ class Dataset():
         Parameters
         ----------
         data : list
-            List of data to be loaded into the Dataset object. Must be 
+            List of data to be loaded into the Dataset object.
         '''
         if len(data) != 4:
             print('Dataset outdated')

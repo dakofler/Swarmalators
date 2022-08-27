@@ -18,7 +18,7 @@ class Simulation:
         K: float=1.0,
         plot_type: str='positions',
         alpha: float=0,
-        max_sim_time: float=0):
+        max_simulation_time: float=0):
         '''
         Instantiates the environment for a swarmalator-simulation.
 
@@ -29,49 +29,57 @@ class Simulation:
         Logging : bool, optional
             Logs positions and velocities for later analysis. default=`False`
         num_swarmalators : int, optional
-            Number of swarmalators to be added. default=`100`
-        memory_init : string, optional
-            Method for initializing swarmalator memory. Can be `random`, `zeroes` or `gradual`. default=`random`
-        time_step : float, optional
-            Time step for each iteration in seconds. default=`0.1`
+            Number of swarmalators in the simulation. default=`100`
+        memory_init : {'random', 'zeroes', 'gradual'}, optional
+            Method of swarmalator memory initialization. default=`random`
+            `random`: random positions and phases.
+            `zeroes`: initialize positions and phases as 0.
+            `gradual`: initialize empty memory and learn positions and phases gradually.
+        delta_t : float, optional
+            Time step of an iteration in seconds. default=`0.1`
+        coupling_probability : float, optional
+            Probability that a swarmalator successfully receives information about another swarmalators position and phase per iteration. default=`0.1`
         J : float, optional
-            Like attracts like strength. default=`0.1`
+            Phase attraction strength. For J > 0 swarmalators with similar phases attract each other. For J < 0 opposite phased swarmalators are attracted. default=`0.1`
         K : float, optional
-            Synchronization strength. default=`1.0`
-        plot_type : string, optional
-            Type of plot. Can be `positions` or `phases`. default=`positions`
+            Phase coupling strength. For K > 0 swarmalators try to minimize their phase difference. For K < 0 the difference is maximized. default=`1.0`
+        plot_type : {'positions', 'phases'}, optional
+            Type of data to be displayed. default=`positions`
         alpha : float, optional
             Momentum factor. Must be between 0 and 1. default=`0`
+        max_simulation_time : float, optional
+            Time in s after which the simulation is stopped automatically. The simulation does not stop, if it is `0`. default=`0`
         '''
         self.plot_size = plot_size
         self.logging = logging
         self.alpha = alpha
-        self.max_sim_time = max_sim_time
+        self.max_simulation_time = max_simulation_time
 
         self.memory_log = []
         self.velocity_log = []
-
         self.list_of_swarmalators = []
+
         self.iteration = 1
         self.simulaton_time = 0
         self.comp_time = 0
         self.paused = False
         self.stopped = True
-        self.init_canvas(num_swarmalators, memory_init, time_step, coupling_probability, J, K, plot_type)
+
+        self.__init_canvas(num_swarmalators, memory_init, time_step, coupling_probability, J, K, plot_type)
 
     #region Core functions
     def run_simulation(self):
         '''
         Starts the main loop.
         '''
-        self.draw_coordinate_system()
+        self.__draw_coordinate_system()
         self.sim.mainloop()
 
-    def step(self):
+    def __step(self):
         '''
         Makes each swarmalator perform one step of syncing and moving.
         '''
-        if self.simulaton_time <= self.max_sim_time:
+        if self.simulaton_time <= self.max_simulation_time or self.max_simulation_time == 0.0:
             wait_time = int(self.time_step * 1000)
             self.simulation_type = str(self.var_plot_type.get()) # read simulation type input to make live-switching possible
 
@@ -82,7 +90,7 @@ class Simulation:
                     # update swarmalators
                     for s in self.list_of_swarmalators:
                         s.run(self.memory, self.velocities, self.time_step, self.J, self.K, self.coupling_probability, self.alpha)
-                    self.draw_swarmalators()
+                    self.__draw_swarmalators()
 
                     # log time
                     end = time.time()
@@ -92,31 +100,54 @@ class Simulation:
                     self.simulaton_time += self.time_step
 
                     # write data to labels
-                    self.update_labels()
+                    self.__update_labels()
 
                     # logging
-                    if self.logging: self.log()
+                    if self.logging: self.__log()
 
                     self.iteration += 1
 
-                self.canvas.after(wait_time, self.step)
+                self.canvas.after(wait_time, self.__step)
         else:
-            self.stop_simulation()
+            self.__stop_simulation()
 
     #endregion
 
     #region Other
-    def log(self):
+    def __log(self):
+        '''
+        Stores the current memory and velocity to seperate lists each iteration for later analysis.
+        '''
         self.memory_log.append(self.memory.copy())
         self.velocity_log.append(self.velocities.copy())
     
     #endregion
 
     #region Initialization
-    def init_canvas(self, num_swarmalators, memory_init, time_step, coupling_probability, J, K, plot_type):
+    def __init_canvas(self, num_swarmalators: int, memory_init: str, time_step: float, coupling_probability: float, J: float, K: float, plot_type: str):
         '''
-        Initializes the environment canvas object.
-        '''       
+        Initializes the environment canvas object and all control elements.
+
+        Parameters
+        ----------
+        num_swarmalators : int, optional
+            Number of swarmalators in the simulation.
+        memory_init : {'random', 'zeroes', 'gradual'}
+            Method of swarmalator memory initialization.
+            `random`: random positions and phases.
+            `zeroes`: initialize positions and phases as 0.
+            `gradual`: initialize empty memory and learn positions and phases gradually.
+        time_step : float
+            Time step of an iteration in seconds.
+        coupling_probability : float
+            Probability that a swarmalator successfully receives information about another swarmalators position and phase per iteration.
+        J : float
+            Phase attraction strength. For J > 0 swarmalators with similar phases attract each other. For J < 0 opposite phased swarmalators are attracted.
+        K : float
+            Phase coupling strength. For K > 0 swarmalators try to minimize their phase difference. For K < 0 the difference is maximized.
+        plot_type : {'positions', 'phases'}, optional
+            Type of data to be displayed.
+        '''
         self.sim = tk.Tk()
         
         # Canvas
@@ -163,24 +194,24 @@ class Simulation:
         # Entry Plot Type
         tk.Label(self.sim, text='Plot type').grid(row=6, column=1, sticky='w')
         self.var_plot_type = tk.StringVar(self.sim, plot_type)
-        tk.Radiobutton(self.sim, text='positions', variable=self.var_plot_type, value='positions', command=self.draw_coordinate_system).grid(row=6, column=2)
-        tk.Radiobutton(self.sim, text='phases', variable=self.var_plot_type, value='phases', command=self.draw_coordinate_system).grid(row=6, column=3)
+        tk.Radiobutton(self.sim, text='positions', variable=self.var_plot_type, value='positions', command=self.__draw_coordinate_system).grid(row=6, column=2)
+        tk.Radiobutton(self.sim, text='phases', variable=self.var_plot_type, value='phases', command=self.__draw_coordinate_system).grid(row=6, column=3)
 
         # Button Start
-        self.btn_start = tk.Button(self.sim, text='Start/Reset simulation', command=self.start_simulation)
+        self.btn_start = tk.Button(self.sim, text='Start/Reset simulation', command=self.__start_simulation)
         self.btn_start.grid(row=8, column=1)
 
         # Button Stop
-        self.btn_stop = tk.Button(self.sim, text='Stop simulation', command=self.stop_simulation)
+        self.btn_stop = tk.Button(self.sim, text='Stop simulation', command=self.__stop_simulation)
         self.btn_stop.grid(row=8, column=2)
         self.btn_stop.config(state='disabled')
 
         # Button Pause
-        self.btn_pause = tk.Button(self.sim, text='Pause simulation', command=self.pause_simulation)
+        self.btn_pause = tk.Button(self.sim, text='Pause simulation', command=self.__pause_simulation)
         self.btn_pause.grid(row=9, column=1)
 
-        # Button Show Data
-        tk.Button(self.sim, text='Save data', command=self.save_data).grid(row=10, column=1)
+        # Button Save Data
+        tk.Button(self.sim, text='Save data', command=self.__save_data).grid(row=10, column=1)
 
         # Label Iteration
         self.lbl_iteration = tk.Label(self.sim, text='iteration = 1')
@@ -197,7 +228,7 @@ class Simulation:
         self.sim.title('Swarmalators')
         self.sim.resizable(False, False)
 
-    def init_positions_phases(self):
+    def __init_positions_phases(self):
         '''
         Initializes the environment memory with swarmalator positons, phases and velocities.
         '''
@@ -208,7 +239,7 @@ class Simulation:
             self.memory[i] = s.memory[i]
             self.velocities[i] = s.velocity
 
-    def init_swarmalators(self):
+    def __init_swarmalators(self):
         '''
         Adds new swarmalator objects to the envionment.
         '''
@@ -220,7 +251,7 @@ class Simulation:
     #endregion
 
     #region Updating
-    def read_inputs(self):
+    def __read_inputs(self):
         '''
         Reads values from the input control elements.
         '''
@@ -237,7 +268,7 @@ class Simulation:
             print('Error reading inputs.')
             return False
 
-    def update_labels(self):
+    def __update_labels(self):
         self.lbl_iteration['text'] = f'iteration = {self.iteration}'
         self.lbl_sim_time['text'] = f'sim_time = {round(self.simulaton_time, 1)} s'
         self.lbl_comp_time['text'] = f'step_comp_time = {round(self.comp_time, 0)} ms'
@@ -245,11 +276,11 @@ class Simulation:
     #endregion
 
     #region Button Events
-    def start_simulation(self):
+    def __start_simulation(self):
         '''
         Starts a simulation run.
         '''
-        if not self.read_inputs(): return
+        if not self.__read_inputs(): return
         self.paused = False
         self.stopped = False
         self.iteration = 1
@@ -260,13 +291,13 @@ class Simulation:
         self.btn_start.config(state='disabled')
         self.btn_stop.config(state='active')
 
-        self.draw_coordinate_system()
+        self.__draw_coordinate_system()
         self.canvas.update()
-        self.init_swarmalators()
-        self.init_positions_phases()
-        self.step()
+        self.__init_swarmalators()
+        self.__init_positions_phases()
+        self.__step()
 
-    def stop_simulation(self):
+    def __stop_simulation(self):
         '''
         Stops the active simulation run.
         '''
@@ -274,7 +305,7 @@ class Simulation:
         self.btn_start.config(state='active')
         self.btn_stop.config(state='disabled')
 
-    def pause_simulation(self):
+    def __pause_simulation(self):
         '''
         Pauses the simulation if one is currently running. Otherwise resumes current simulation.
         '''
@@ -283,7 +314,7 @@ class Simulation:
             if self.paused: self.btn_pause['text'] = 'Resume Simulation'
             else: self.btn_pause['text'] = 'Pause Simulation'
     
-    def save_data(self):
+    def __save_data(self):
         '''
         Saves logged information to a Dataset object.
         '''
@@ -301,7 +332,7 @@ class Simulation:
     #endregion
 
     #region Drawing
-    def draw_coordinate_system(self):
+    def __draw_coordinate_system(self):
         '''
         Draws a coordinate system on the canvas.
         '''
@@ -328,15 +359,15 @@ class Simulation:
                 self.canvas.create_line(x_x0, x_y0, x_x1, x_y1, dash=(2, 2)) # helper x axis
                 self.canvas.create_line(y_x0, y_y0, y_x1, y_y1, dash=(2, 2)) # helper y axis
 
-    def draw_swarmalators(self):
+    def __draw_swarmalators(self):
         '''
         Draws swarmalators on the canvas.
         '''
         self.canvas.delete("s")
-        if self.simulation_type == 'positions': self.draw_positions()
-        else: self.draw_phases()
+        if self.simulation_type == 'positions': self.__draw_positions()
+        else: self.__draw_phases()
 
-    def draw_positions(self):
+    def __draw_positions(self):
         '''
         Draws swarmalators on the canvas based on their position.
         '''
@@ -356,7 +387,7 @@ class Simulation:
                 arrow=tk.LAST, arrowshape=(8 * size / 5, 10 * size / 5, 3 * size / 5))
             # self.canvas.create_text(x2, y2, text=str(i), tags='s')
 
-    def draw_phases(self):
+    def __draw_phases(self):
         '''
         Draws swarmalators on the canvas based on their phase.
         '''
@@ -374,5 +405,3 @@ class Simulation:
             self.canvas.create_oval(x1, y1, x2, y2, fill='black', tags='s')
     
     #endregion
-
-
