@@ -62,6 +62,7 @@ class Simulation:
         self.iteration = 1
         self.simulaton_time = 0
         self.comp_time = 0
+        self.global_phase = 0
         self.paused = False
         self.stopped = True
 
@@ -105,6 +106,7 @@ class Simulation:
                     if self.logging: self.__log()
 
                     self.iteration += 1
+                    self.__tick(frequency=0.5)
 
                 self.canvas.after(wait_time, self.__step)
         else:
@@ -120,6 +122,15 @@ class Simulation:
         self.memory_log.append(self.memory.copy())
         self.velocity_log.append(self.velocities.copy())
     
+    def __tick(self, frequency):
+        '''
+        Updates the simulation clock.
+        '''
+        p = self.global_phase + (2 * math.pi * self.time_step * frequency)
+        if p > math.pi: p -= 2 * math.pi
+        if p < -math.pi: p += 2 * math.pi
+        self.global_phase = p
+
     #endregion
 
     #region Initialization
@@ -373,7 +384,10 @@ class Simulation:
         '''
         size = self.plot_size / 120
         for i in range(self.num_swarmalators):
-            color = hlp.phase_to_hex(self.memory[i][2])
+            p = self.global_phase + self.memory[i][2]
+            if p > math.pi: p -= 2 * math.pi
+            if p < -math.pi: p += 2 * math.pi
+            color = hlp.phase_to_hex(p)
 
             x1 = self.plot_size * ((self.memory[i][0] + 2.0 ) / 4.0)
             y1 = (self.plot_size * ((-self.memory[i][1] + 2.0 ) / 4.0))
