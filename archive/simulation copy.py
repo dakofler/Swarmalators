@@ -2,7 +2,6 @@ import time
 import math
 import numpy as np
 import tkinter as tk
-import customtkinter as ctk
 
 from swarmalator_model.swarmalator import Swarmalator
 from swarmalator_model.dataset import Dataset
@@ -159,87 +158,85 @@ class Simulation:
         plot_type : {'positions', 'phases'}, optional
             Type of data to be displayed.
         '''
-        self.sim = ctk.CTk()
-
-        ctk.set_appearance_mode("light")  # Modes: system (default), light, dark
-        ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
+        self.sim = tk.Tk()
         
         # Canvas
-        self.canvas = ctk.CTkCanvas(master=self.sim, width=self.plot_size, height=self.plot_size)
+        self.canvas = tk.Canvas(self.sim, width=self.plot_size, height=self.plot_size)
         self.canvas.grid(row=0, column=0, rowspan=15)
 
         # Entry Number of Swarmalators
-        ctk.CTkLabel(self.sim, text='Number of swarmalators').grid(row=0, column=1, sticky='w')
-        self.entry_num_swarmalators = ctk.CTkEntry(self.sim)
+        tk.Label(self.sim, text='Number of swarmalators').grid(row=0, column=1, sticky='w')
+        self.entry_num_swarmalators = tk.Entry(self.sim)
         self.entry_num_swarmalators.insert(0, str(num_swarmalators))
         self.entry_num_swarmalators.grid(row=0, column=2)
 
         # Entry Memory Init Method
-        ctk.CTkLabel(self.sim, text='Memory initialization').grid(row=1, column=1, sticky='w')
+        tk.Label(self.sim, text='Memory initialization').grid(row=1, column=1, sticky='w')
         self.var_memory_init = tk.StringVar(self.sim, memory_init)
-        ctk.CTkRadioButton(self.sim, text='random', variable=self.var_memory_init, value='random').grid(row=1, column=2)
-        ctk.CTkRadioButton(self.sim, text='zeroes', variable=self.var_memory_init, value='zeroes').grid(row=1, column=3)
-        ctk.CTkRadioButton(self.sim, text='gradual', variable=self.var_memory_init, value='gradual').grid(row=1, column=4)
+        tk.Radiobutton(self.sim, text='random', variable=self.var_memory_init, value='random').grid(row=1, column=2)
+        tk.Radiobutton(self.sim, text='zeroes', variable=self.var_memory_init, value='zeroes').grid(row=1, column=3)
+        tk.Radiobutton(self.sim, text='gradual', variable=self.var_memory_init, value='gradual').grid(row=1, column=4)
 
         # Entry Time Step
-        ctk.CTkLabel(self.sim, text='Time step in s').grid(row=2, column=1, sticky='w')
-        self.entry_time_step = ctk.CTkEntry(self.sim)
+        tk.Label(self.sim, text='Time step in s').grid(row=2, column=1, sticky='w')
+        self.entry_time_step = tk.Entry(self.sim)
         self.entry_time_step.insert(0, str(time_step))
         self.entry_time_step.grid(row=2, column=2)
 
         # Entry Coupling Probabiltity
-        ctk.CTkLabel(self.sim, text='Coupling probability').grid(row=3, column=1, sticky='w')
-        self.entry_coupling_probability = ctk.CTkEntry(self.sim)
+        tk.Label(self.sim, text='Coupling probability').grid(row=3, column=1, sticky='w')
+        self.entry_coupling_probability = tk.Entry(self.sim)
         self.entry_coupling_probability.insert(0, str(coupling_probability))
         self.entry_coupling_probability.grid(row=3, column=2)
 
         # Entry J
-        ctk.CTkLabel(self.sim, text='J').grid(row=4, column=1, sticky='w')
-        self.entry_J = ctk.CTkEntry(self.sim)
+        tk.Label(self.sim, text='J').grid(row=4, column=1, sticky='w')
+        self.entry_J = tk.Entry(self.sim)
         self.entry_J.insert(0, str(J))
         self.entry_J.grid(row=4, column=2)
 
         # Entry K
-        ctk.CTkLabel(self.sim, text='K').grid(row=5, column=1, sticky='w')
-        self.entry_K = ctk.CTkEntry(self.sim)
+        tk.Label(self.sim, text='K').grid(row=5, column=1, sticky='w')
+        self.entry_K = tk.Entry(self.sim)
         self.entry_K.insert(0, str(K))
         self.entry_K.grid(row=5, column=2)
 
         # Entry Plot Type
-        ctk.CTkLabel(self.sim, text='Plot type').grid(row=6, column=1, sticky='w')
+        tk.Label(self.sim, text='Plot type').grid(row=6, column=1, sticky='w')
         self.var_plot_type = tk.StringVar(self.sim, plot_type)
-        ctk.CTkRadioButton(self.sim, text='positions', variable=self.var_plot_type, value='positions', command=self.__draw_coordinate_system).grid(row=6, column=2)
-        ctk.CTkRadioButton(self.sim, text='phases', variable=self.var_plot_type, value='phases', command=self.__draw_coordinate_system).grid(row=6, column=3)
+        tk.Radiobutton(self.sim, text='positions', variable=self.var_plot_type, value='positions', command=self.__draw_coordinate_system).grid(row=6, column=2)
+        tk.Radiobutton(self.sim, text='phases', variable=self.var_plot_type, value='phases', command=self.__draw_coordinate_system).grid(row=6, column=3)
 
         # Button Start
-        self.btn_start = ctk.CTkButton(self.sim, text='Start/Reset simulation', command=self.__start_simulation)
+        self.btn_start = tk.Button(self.sim, text='Start/Reset simulation', command=self.__start_simulation)
         self.btn_start.grid(row=8, column=1)
 
         # Button Stop
-        self.btn_stop = ctk.CTkButton(self.sim, text='Stop simulation', command=self.__stop_simulation)
+        self.btn_stop = tk.Button(self.sim, text='Stop simulation', command=self.__stop_simulation)
         self.btn_stop.grid(row=8, column=2)
-        self.btn_stop.configure(state=tk.DISABLED)
+        self.btn_stop.config(state='disabled')
 
         # Button Pause
-        self.btn_pause = ctk.CTkButton(self.sim, text='Pause simulation', command=self.__pause_simulation)
+        self.btn_pause = tk.Button(self.sim, text='Pause simulation', command=self.__pause_simulation)
         self.btn_pause.grid(row=9, column=1)
 
         # Button Save Data
-        ctk.CTkButton(self.sim, text='Save data', command=self.__save_data).grid(row=10, column=1)
+        tk.Button(self.sim, text='Save data', command=self.__save_data).grid(row=10, column=1)
 
         # Label Iteration
-        self.lbl_iteration = ctk.CTkLabel(self.sim, text='iteration = 1')
+        self.lbl_iteration = tk.Label(self.sim, text='iteration = 1')
         self.lbl_iteration.grid(row=11, column=1, sticky='w')
 
         # Label Simulation Time
-        self.lbl_sim_time = ctk.CTkLabel(self.sim, text='sim_time = 0 s')
+        self.lbl_sim_time = tk.Label(self.sim, text='sim_time = 0 s')
         self.lbl_sim_time.grid(row=12, column=1, sticky='w')
 
         # Label Computation Time
-        self.lbl_comp_time = ctk.CTkLabel(self.sim, text='comp_time = 0 s')
+        self.lbl_comp_time = tk.Label(self.sim, text='comp_time = 0 s')
         self.lbl_comp_time.grid(row=13, column=1, sticky='w')
 
         self.sim.title('Swarmalators')
+        self.sim.resizable(False, False)
 
     def __init_positions_phases(self):
         '''
@@ -282,9 +279,9 @@ class Simulation:
             return False
 
     def __update_labels(self):
-        self.lbl_iteration.configure(text=f'iteration = {self.iteration}')
-        self.lbl_sim_time.configure(text=f'sim_time = {round(self.simulaton_time, 1)} s')
-        self.lbl_comp_time.configure(text=f'step_comp_time = {round(self.comp_time, 0)} ms')
+        self.lbl_iteration['text'] = f'iteration = {self.iteration}'
+        self.lbl_sim_time['text'] = f'sim_time = {round(self.simulaton_time, 1)} s'
+        self.lbl_comp_time['text'] = f'step_comp_time = {round(self.comp_time, 0)} ms'
 
     #endregion
 
@@ -301,8 +298,8 @@ class Simulation:
         self.memory_log.clear()
         self.velocity_log.clear()
         self.btn_pause['text'] = 'Pause Simulation'
-        self.btn_start.configure(state=tk.DISABLED)
-        self.btn_stop.configure(state=tk.NORMAL)
+        self.btn_start.config(state='disabled')
+        self.btn_stop.config(state='active')
 
         self.__draw_coordinate_system()
         self.canvas.update()
@@ -316,8 +313,8 @@ class Simulation:
         '''
         self.stopped = True
         self.canvas.delete("s")
-        self.btn_start.configure(state=tk.NORMAL)
-        self.btn_stop.configure(state=tk.DISABLED)
+        self.btn_start.config(state='active')
+        self.btn_stop.config(state='disabled')
 
     def __pause_simulation(self):
         '''
