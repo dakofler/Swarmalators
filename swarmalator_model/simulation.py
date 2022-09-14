@@ -170,9 +170,16 @@ class Simulation:
 
         # Entry Number of Swarmalators
         ctk.CTkLabel(self.sim, text='Number of swarmalators').grid(row=0, column=1, sticky='w')
-        self.entry_num_swarmalators = ctk.CTkEntry(self.sim)
-        self.entry_num_swarmalators.insert(0, str(num_swarmalators))
-        self.entry_num_swarmalators.grid(row=0, column=2)
+        
+        # self.entry_num_swarmalators = ctk.CTkEntry(self.sim)
+        # self.entry_num_swarmalators.insert(0, str(num_swarmalators))
+        # self.entry_num_swarmalators.grid(row=0, column=2)
+
+        self.lbl_num_swarmalators = ctk.CTkLabel(self.sim, text=str(num_swarmalators))
+        self.lbl_num_swarmalators.grid(row=0, column=2, sticky='w')
+        self.slider_num_swarmalators = ctk.CTkSlider(self.sim, from_=50, to=500, number_of_steps=45, command=lambda v: self.lbl_num_swarmalators.configure(text=str(int(v))))
+        self.slider_num_swarmalators.set(num_swarmalators)
+        self.slider_num_swarmalators.grid(row=0, column=3)
 
         # Entry Memory Init Method
         ctk.CTkLabel(self.sim, text='Memory initialization').grid(row=1, column=1, sticky='w')
@@ -269,7 +276,7 @@ class Simulation:
         Reads values from the input control elements.
         '''
         try:
-            self.num_swarmalators = int(self.entry_num_swarmalators.get())
+            self.num_swarmalators = int(self.slider_num_swarmalators.get())
             self.memory_init = str(self.var_memory_init.get())
             self.time_step = round(float(self.entry_time_step.get()), 2)
             self.coupling_probability = round(float(self.entry_coupling_probability.get()), 2)
@@ -288,7 +295,7 @@ class Simulation:
 
     #endregion
 
-    #region Button Events
+    #region Events/Commands
     def __start_simulation(self):
         '''
         Starts a simulation run.
