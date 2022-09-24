@@ -28,7 +28,9 @@ class Dataset():
         Saves the Dataset object to a binary file using pickle.
         '''
         if not os.path.exists('sim_data\\'): os.makedirs('sim_data\\')
-        filename = 'sim_data\\dataset_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.ssd'
+        timehash = str(datetime.now().strftime('%Y%m%d%H%M%S'))
+        param_str = '_'.join([str(self.parameters['j']), str(self.parameters['k']), str(self.parameters['cp']), str(self.parameters['a'])])
+        filename = 'sim_data\\dataset_' + param_str + '_' + timehash + '.ssd'
         with open(filename, 'wb') as fp:
             pickle.dump(self, fp)
     

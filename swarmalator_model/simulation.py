@@ -3,9 +3,9 @@ import math
 import numpy as np
 import tkinter as tk
 import customtkinter as ctk
-
 from swarmalator_model.swarmalator import Swarmalator
 from swarmalator_model.dataset import Dataset
+from swarmalator_model.preset import Preset
 from swarmalator_model import helper_functions as hlp
 
 
@@ -19,7 +19,8 @@ class Simulation:
         K: float=1.0,
         plot_type: str='positions',
         alpha: float=0,
-        max_simulation_time: float=0):
+        max_simulation_time: float=0,
+        auto: bool=False):
         '''
         Instantiates the environment for a swarmalator-simulation.
 
@@ -50,11 +51,15 @@ class Simulation:
             Momentum factor. Must be between 0 and 1. default=`0`
         max_simulation_time : float, optional
             Time in s after which the simulation is stopped automatically. The simulation does not stop, if it is `0`. default=`0`
+        auto : bool, optional
+            If true, the simulation is automatically started and stopped. default=`0`
+
         '''
         self.plot_size = plot_size
         self.logging = logging
         self.alpha = alpha
         self.max_simulation_time = max_simulation_time
+        self.auto = auto
 
         self.memory_log = []
         self.velocity_log = []
@@ -68,6 +73,7 @@ class Simulation:
         self.stopped = True
 
         self.__init_canvas(num_swarmalators, memory_init, time_step, coupling_probability, J, K, alpha, plot_type)
+        if self.auto and self.max_simulation_time != 0: self.__start_simulation()
 
     #region Core functions
     def run_simulation(self):
@@ -81,7 +87,7 @@ class Simulation:
         '''
         Makes each swarmalator perform one step of syncing and moving.
         '''
-        if self.simulaton_time <= self.max_simulation_time or self.max_simulation_time == 0.0:
+        if self.simulaton_time < self.max_simulation_time or self.max_simulation_time == 0.0:
             wait_time = int(self.time_step * 1000.0)
             self.simulation_type = str(self.var_plot_type.get()) # read simulation type input to make live-switching possible
 
@@ -164,13 +170,13 @@ class Simulation:
         # Window setup
         self.sim = ctk.CTk()
         window_width = self.plot_size + 750
-        window_height = self.plot_size + 100
+        window_height = self.plot_size + 200
         screen_width = self.sim.winfo_screenwidth()
         screen_height = self.sim.winfo_screenheight()
         center_x = int(screen_width/2 - window_width / 2)
         center_y = int(screen_height/2 - window_height / 2)
         self.sim.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
-        self.sim.resizable(False, False)
+        # self.sim.resizable(False, False)
         
         self.sim.configure(bg='white')
         self.sim.title('Swarmalators')
@@ -265,6 +271,9 @@ class Simulation:
         # Button Save Data
         ctk.CTkButton(self.sim, text='Save', command=self.__save_data).grid(row=7, column=5)
 
+        # Button Save Preset
+        ctk.CTkButton(self.sim, text='Save preset', command=self.__save_preset).grid(row=9, column=5)
+
         # Label Iteration
         self.lbl_iteration = ctk.CTkLabel(self.sim, text='Iteration 1')
         self.lbl_iteration.grid(row=14, column=1, sticky='w')
@@ -284,6 +293,8 @@ class Simulation:
         ctk.CTkLabel(self.sim, text=' ').grid(row=0, column=4)
         ctk.CTkLabel(self.sim, text=' ').grid(row=0, column=6)
         ctk.CTkLabel(self.sim, text=' ').grid(row=13, column=0)
+
+        self.__read_inputs()
 
     def __init_positions_phases(self):
         '''
@@ -363,6 +374,9 @@ class Simulation:
         self.canvas.delete("s")
         self.btn_start.configure(state=tk.NORMAL)
         self.btn_stop.configure(state=tk.DISABLED)
+        if self.auto:
+            self.__save_data()
+            self.sim.destroy()
 
     def __pause_simulation(self):
         '''
@@ -387,6 +401,19 @@ class Simulation:
         
         data = [self.memory_log, self.velocity_log, round(self.simulaton_time, 2), parameters]
         Dataset(data).save_to_file()
+
+    def __save_preset(self):
+        data = {
+            'n' : self.num_swarmalators,
+            'i' : self.memory_init,
+            'dt' : self.time_step,
+            'j' : self.J,
+            'k' : self.K,
+            'cp' : self.coupling_probability,
+            'a' : self.alpha
+        }
+
+        Preset(data).save_to_json()
 
     #endregion
 
