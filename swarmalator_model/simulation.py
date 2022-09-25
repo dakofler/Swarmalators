@@ -178,7 +178,6 @@ class Simulation:
         self.sim.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
         # self.sim.resizable(False, False)
         
-        self.sim.configure(bg='white')
         self.sim.title('Swarmalators')
 
         self.sim.columnconfigure(0, weight=5)
@@ -188,8 +187,9 @@ class Simulation:
         self.sim.rowconfigure(0, weight=5)
         self.sim.rowconfigure(13, weight=5)
 
-        ctk.set_appearance_mode("light")  # Modes: system (default), light, dark
-        ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
+        ctk.set_appearance_mode('light')  # Modes: system (default), light, dark
+        ctk.set_default_color_theme('resources\\theme.json')
+        # ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
         
         # Canvas
         self.canvas = ctk.CTkCanvas(master=self.sim, width=self.plot_size, height=self.plot_size, bg='white')
@@ -203,7 +203,7 @@ class Simulation:
         self.slider_num_swarmalators.grid(row=1, column=8)
 
         self.lbl_num_swarmalators = ctk.CTkLabel(self.sim, text=str(num_swarmalators))
-        self.lbl_num_swarmalators.grid(row=1, column=9)
+        self.lbl_num_swarmalators.grid(row=1, column=9, sticky=tk.W)
 
         # Entry Memory Init Method
         ctk.CTkLabel(self.sim, text='Memory initialization').grid(row=2, column=7, sticky=tk.W)
