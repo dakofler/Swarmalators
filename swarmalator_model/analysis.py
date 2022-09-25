@@ -33,27 +33,32 @@ class Analysis:
         for d in self.datasets:
             print(d)
 
-    def plot_avg_speed(self, dataset_name: str):
+    def plot_avg_speed(self, dataset_names: list, save: bool = False):
         '''
-        Plots the average speed over all iterations of a Dataset object.
+        Plots the average speed over all iterations of Dataset objects.
 
         Parameters
         ----------
-        dataset_name : str
-            Name of the Dataset object within the datasets dictionary.
-        '''  
-        if dataset_name not in self.datasets:
-            print('Dataset not found.')
-            return
+        dataset_names : list
+            List of Dataset object names within the datasets dictionary.
+        save : bool, optional
+            Whether to save to plot as .jpg. default=False
+        '''
 
-        d = self.datasets[dataset_name]
-        pos, pha, vel = d.prep_data()
-        
-        Y = np.average(np.linalg.norm(vel, axis=2), axis=1)
-        X = np.arange(1, len(Y) + 1)
+        data = {}
 
-        hlp.plot2D(x=X, y=Y, x_label='iteration', y_label='average speed', type='line', title='Average speed per iteration')
+        for d in dataset_names:
+            if d not in self.datasets:
+                print(f'Dataset {d} not found.')
+                return
+            
+            ds = self.datasets[d]
+            pos, pha, vel = ds.prep_data()
+            y = np.average(np.linalg.norm(vel, axis=2), axis=1)
+            x = np.arange(1, len(y) + 1)
 
-        pass
+            data[d] = [x, y]
+
+        hlp.plot_lines(data=data, x_label='Iteration', y_label='Average Speed in Units/Timestep', title='Average Speed per Iteration', save=save)
 
 

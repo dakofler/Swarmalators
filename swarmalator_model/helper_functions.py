@@ -1,10 +1,8 @@
 import math
 import colorsys
 import pickle
-import plotly.express as px
-import pandas as pd
-import numpy as np
-import customtkinter as ctk
+import os
+import matplotlib.pyplot as plt
 
 
 def phase_to_hex(phase: float):
@@ -44,34 +42,40 @@ def load_data(filename: str):
         dataset = pickle.load(fp)
     return dataset
 
-def plot2D(type: str, x: np.ndarray, y: np.ndarray, x_label: str, y_label: str, title: str):
+
+def plot_lines(data: dict, x_label: str, y_label: str, title: str, save: bool = False):
     '''
-    Creats a 2D Plot.
+    Creats a 2D plot with two lines.
 
     Parameters
     ----------
-    type : str
-        Plot type. Can be `line` or `scatter`.
-    x : nd.ndarray
-        Numpy array of x values of shape (n, ).
-    y : nd.ndarray
-        Numpy array of y values of shape (n, ).
+    data : dict
+        Dictionary of traces to be plotted of the form { tracename : [X, Y]}
     x_label : str
         X-axis label.
     y_label : str
         Y-axis label.
     title : str
         Plot title.
+    save : bool, optional
+        Whether to save to plot as .jpg. default=False
     '''   
-    data = pd.DataFrame({
-        x_label : x,
-        y_label : y
-    })
+    if save and not os.path.exists('plots\\'): os.makedirs('plots\\')
 
-    if type == 'line':
-        fig = px.line(data, x=x_label, y=y_label, title=title)
-        fig.show()
+    plt.figure(figsize=(10, 6))
 
-    elif type == 'scatter':
-        pass
-    return
+    filename = ''
+
+    for trace in data:
+        x = data[trace][0]
+        y = data[trace][1]
+        plt.plot(x, y, label=trace)
+        filename += (('_' + trace) if filename != '' else trace)
+
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.grid(axis='y')
+    plt.legend()
+    if save: plt.savefig(f'plots\\{filename}.jpg')
+    else: plt.show()

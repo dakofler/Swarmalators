@@ -173,8 +173,8 @@ class Simulation:
         window_height = self.plot_size + 200
         screen_width = self.sim.winfo_screenwidth()
         screen_height = self.sim.winfo_screenheight()
-        center_x = int(screen_width/2 - window_width / 2)
-        center_y = int(screen_height/2 - window_height / 2)
+        center_x = max(int(screen_width / 2 - window_width / 2), 0)
+        center_y = max(int(screen_height / 2 - window_height / 2), 0)
         self.sim.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
         # self.sim.resizable(False, False)
         
@@ -183,7 +183,7 @@ class Simulation:
 
         self.sim.columnconfigure(0, weight=5)
         self.sim.columnconfigure(4, weight=5)
-        self.sim.columnconfigure(5, weight=5)
+        self.sim.columnconfigure(5, weight=5, minsize=100)
         self.sim.columnconfigure(6, weight=5)
         self.sim.rowconfigure(0, weight=5)
         self.sim.rowconfigure(13, weight=5)
@@ -258,21 +258,27 @@ class Simulation:
         # Button Start
         self.btn_start = ctk.CTkButton(self.sim, text='Start', command=self.__start_simulation)
         self.btn_start.grid(row=1, column=5)
+        if self.auto: self.btn_start.configure(state=tk.DISABLED)
 
         # Button Stop
         self.btn_stop = ctk.CTkButton(self.sim, text='Stop', command=self.__stop_simulation)
-        self.btn_stop.grid(row=3, column=5)
+        self.btn_stop.grid(row=2, column=5)
         self.btn_stop.configure(state=tk.DISABLED)
 
         # Button Pause
         self.btn_pause = ctk.CTkButton(self.sim, text='Pause', command=self.__pause_simulation)
-        self.btn_pause.grid(row=5, column=5)
+        self.btn_pause.grid(row=3, column=5)
+        if self.auto: self.btn_pause.configure(state=tk.DISABLED)
 
         # Button Save Data
-        ctk.CTkButton(self.sim, text='Save', command=self.__save_data).grid(row=7, column=5)
+        btn_save_data = ctk.CTkButton(self.sim, text='Save', command=self.__save_data)
+        btn_save_data.grid(row=4, column=5)
+        if self.auto: btn_save_data.configure(state=tk.DISABLED)
 
         # Button Save Preset
-        ctk.CTkButton(self.sim, text='Save preset', command=self.__save_preset).grid(row=9, column=5)
+        btn_save_preset = ctk.CTkButton(self.sim, text='Save preset', command=self.__save_preset)
+        btn_save_preset.grid(row=5, column=5)
+        if self.auto: btn_save_preset.configure(state=tk.DISABLED)
 
         # Label Iteration
         self.lbl_iteration = ctk.CTkLabel(self.sim, text='Iteration 1')
@@ -358,7 +364,7 @@ class Simulation:
         self.velocity_log.clear()
         self.btn_pause['text'] = 'Pause Simulation'
         self.btn_start.configure(state=tk.DISABLED)
-        self.btn_stop.configure(state=tk.NORMAL)
+        if not self.auto: self.btn_stop.configure(state=tk.NORMAL)
 
         self.__draw_coordinate_system()
         self.canvas.update()
@@ -403,6 +409,8 @@ class Simulation:
         Dataset(data).save_to_file()
 
     def __save_preset(self):
+        self.__read_inputs()
+        
         data = {
             'n' : self.num_swarmalators,
             'i' : self.memory_init,
@@ -481,7 +489,6 @@ class Simulation:
             self.canvas.create_line(
                 x1, y1, x2, y2, fill=color, tags='s',
                 arrow=tk.LAST, arrowshape=(8 * size / 5, 10 * size / 5, 3 * size / 5))
-            # self.canvas.create_text(x2, y2, text=str(i), tags='s')
 
     def __draw_phases(self):
         '''
