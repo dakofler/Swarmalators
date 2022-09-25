@@ -176,7 +176,7 @@ class Simulation:
         center_x = max(int(screen_width / 2 - window_width / 2), 0)
         center_y = max(int(screen_height / 2 - window_height / 2), 0)
         self.sim.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
-        # self.sim.resizable(False, False)
+        self.sim.configure(bg='white')
         
         self.sim.title('Swarmalators')
 
@@ -187,9 +187,7 @@ class Simulation:
         self.sim.rowconfigure(0, weight=5)
         self.sim.rowconfigure(13, weight=5)
 
-        ctk.set_appearance_mode('light')  # Modes: system (default), light, dark
         ctk.set_default_color_theme('resources\\theme.json')
-        # ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
         
         # Canvas
         self.canvas = ctk.CTkCanvas(master=self.sim, width=self.plot_size, height=self.plot_size, bg='white')
@@ -268,12 +266,12 @@ class Simulation:
         # Button Pause
         self.btn_pause = ctk.CTkButton(self.sim, text='Pause', command=self.__pause_simulation)
         self.btn_pause.grid(row=3, column=5)
-        if self.auto: self.btn_pause.configure(state=tk.DISABLED)
+        self.btn_pause.configure(state=tk.DISABLED)
 
         # Button Save Data
-        btn_save_data = ctk.CTkButton(self.sim, text='Save', command=self.__save_data)
-        btn_save_data.grid(row=4, column=5)
-        if self.auto: btn_save_data.configure(state=tk.DISABLED)
+        self.btn_save_data = ctk.CTkButton(self.sim, text='Save', command=self.__save_data)
+        self.btn_save_data.grid(row=4, column=5)
+        self.btn_save_data.configure(state=tk.DISABLED)
 
         # Button Save Preset
         btn_save_preset = ctk.CTkButton(self.sim, text='Save preset', command=self.__save_preset)
@@ -362,9 +360,13 @@ class Simulation:
         self.simulaton_time = 0
         self.memory_log.clear()
         self.velocity_log.clear()
-        self.btn_pause['text'] = 'Pause Simulation'
-        self.btn_start.configure(state=tk.DISABLED)
-        if not self.auto: self.btn_stop.configure(state=tk.NORMAL)
+
+        if not self.auto: 
+            self.btn_pause.configure(state=tk.NORMAL)
+            self.btn_pause['text'] = 'Pause'
+            self.btn_start.configure(state=tk.DISABLED)
+            self.btn_save_data.configure(state=tk.NORMAL)
+            self.btn_stop.configure(state=tk.NORMAL)
 
         self.__draw_coordinate_system()
         self.canvas.update()
@@ -390,8 +392,9 @@ class Simulation:
         '''
         if not self.stopped:
             self.paused = not self.paused
-            if self.paused: self.btn_pause['text'] = 'Resume Simulation'
-            else: self.btn_pause['text'] = 'Pause Simulation'
+
+            if self.paused: self.btn_pause.configure(text='Resume')
+            else: self.btn_pause.configure(text='Pause')
     
     def __save_data(self):
         '''
