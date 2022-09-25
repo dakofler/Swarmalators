@@ -7,4 +7,4 @@ The model is extended by adding a momentum term to analyze whether this accelera
 
 ![image](https://user-images.githubusercontent.com/74835806/192149901-aab1fa8f-9649-46fc-b909-9d426c71c3ac.png)
 
-![image](https://user-images.githubusercontent.com/74835806/192149909-d10cead2-9c80-45e9-9e21-7fb1d9085110.png)
+![alpha_0_alpha_0_5](https://user-images.githubusercontent.com/74835806/192149936-79ee93b7-1893-409f-86a1-421a3bc7657a.jpg)
