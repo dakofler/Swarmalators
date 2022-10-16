@@ -37,9 +37,9 @@ class Preset():
             str(self.num_swarmalators),
             str(self.memory_init),
             str(self.time_step),
+            str(self.coupling_probability),
             str(self.J),
             str(self.K),
-            str(self.coupling_probability),
             str(self.alpha)
         ])
     

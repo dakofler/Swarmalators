@@ -1,5 +1,6 @@
 import pickle
 import os
+from sqlite3 import Time
 import numpy as np
 from datetime import datetime
 
@@ -22,15 +23,22 @@ class Dataset():
         self.velocities = data[1]
         self.sim_time = data[2]
         self.parameters = data[3]
+        self.identifier = '_'.join([
+            str(self.parameters['n']),
+            self.parameters['i'],
+            str(self.parameters['dt']),
+            str(self.parameters['cp']),
+            str(self.parameters['j']),
+            str(self.parameters['k']),
+            str(self.parameters['a']),
+            str(datetime.now().strftime('%Y%m%d%H%M%S'))])
 
     def save_to_file(self):
         '''
         Saves the Dataset object to a binary file using pickle.
         '''
         if not os.path.exists('sim_data\\'): os.makedirs('sim_data\\')
-        timehash = str(datetime.now().strftime('%Y%m%d%H%M%S'))
-        param_str = '_'.join([str(self.parameters['j']), str(self.parameters['k']), str(self.parameters['cp']), str(self.parameters['a'])])
-        filename = 'sim_data\\dataset_' + param_str + '_' + timehash + '.ssd'
+        filename = 'sim_data\\' + self.identifier + '.ssd'
         with open(filename, 'wb') as fp:
             pickle.dump(self, fp)
     

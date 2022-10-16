@@ -62,7 +62,7 @@ def plot_lines(data: dict, x_label: str, y_label: str, title: str, save: bool = 
     '''   
     if save and not os.path.exists('plots\\'): os.makedirs('plots\\')
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(15, 10))
 
     filename = ''
 

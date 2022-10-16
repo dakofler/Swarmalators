@@ -401,10 +401,12 @@ class Simulation:
         Saves logged information to a Dataset object.
         '''
         parameters = {
+            'n' : self.num_swarmalators,
+            'i' : self.memory_init,
             'dt' : self.time_step,
+            'cp' : self.coupling_probability,
             'j' : self.J,
             'k' : self.K,
-            'cp' : self.coupling_probability,
             'a' : self.alpha
         }
         
